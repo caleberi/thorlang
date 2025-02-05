@@ -210,7 +210,7 @@ void *p_calloc_fit(size_t count, size_t size, algorithm algorithm)
 {
     if (count == 0 || size == 0)
         return NULL;
-    void *ptr = p_malloc(count * size);
+    void *ptr = p_malloc_fit(count * size, algorithm);
     memset(ptr, 0, count * size);
     return ptr;
 }
