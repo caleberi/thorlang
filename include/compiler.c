@@ -1,29 +1,6 @@
 #include "common.h"
 #include "compiler.h"
 
-typedef enum
-{
-    PREC_NONE,
-    PREC_ASSIGNMENT, // =
-    PREC_OR,         // or
-    PREC_AND,        // and
-    PREC_EQUALITY,   // == !=
-    PREC_COMPARISON, // < > <= >=
-    PREC_TERM,       // + -
-    PREC_FACTOR,     // * /
-    PREC_UNARY,      // ! -
-    PREC_CALL,       // . ()
-    PREC_PRIMARY
-} Precedence;
-
-typedef void (*ParseFn)();
-typedef struct
-{
-    ParseFn prefix;
-    ParseFn infix;
-    Precedence precedence;
-} ParseRule;
-
 Parser parser;
 Chunk *compiling_chunk;
 
@@ -124,10 +101,26 @@ static void parse_precedence(Precedence precedence)
         return;
     }
     prefix_rule();
+
+    while (precedence <= get_rule(parser.current.type)->precedence)
+    {
+        advance();
+        ParseFn infix_rule = get_rule(parser.previous.type)->infix;
+        infix_rule();
+    }
 }
 
 static ParseRule *get_rule(TokenType type) { return &rules[type]; }
-static void end_compiler() { emit_return(); }
+static void end_compiler()
+{
+    emit_return();
+
+#ifdef DEBUG_PRINT_CODE if (!parser.hadError)
+    {
+        disassemble_chunk(current_chunk(), "code");
+    }
+#endif
+}
 
 static uint8_t make_constant(Value value)
 {

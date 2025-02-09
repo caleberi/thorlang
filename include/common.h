@@ -11,6 +11,7 @@
 #include <sys/mman.h>
 #include <pthread.h>
 
+#define DEBUG_PRINT_CODE
 #define DEBUG_TRACE_EXECUTION
 typedef double Value;
 
