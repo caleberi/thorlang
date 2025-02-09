@@ -2,6 +2,7 @@
 #define _THOR_COMPILER_H_
 #include "chunk.h"
 #include "scanner.h"
+#include "debug.h"
 
 typedef struct
 {

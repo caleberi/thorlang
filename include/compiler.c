@@ -115,7 +115,8 @@ static void end_compiler()
 {
     emit_return();
 
-#ifdef DEBUG_PRINT_CODE if (!parser.hadError)
+#ifdef DEBUG_PRINT_CODE
+    if (!parser.had_error)
     {
         disassemble_chunk(current_chunk(), "code");
     }
