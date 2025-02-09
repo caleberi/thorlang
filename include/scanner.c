@@ -3,6 +3,10 @@
 #include "scanner.h"
 #include "trie.h"
 
+#ifdef DEBUG_PRINT_CODE
+#include "debug.h"
+#endif
+
 Scanner scanner;
 Trie trie;
 
