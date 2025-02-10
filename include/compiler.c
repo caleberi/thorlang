@@ -45,6 +45,8 @@ ParseRule rules[] = {
     [TOKEN_WHILE] = {NULL, NULL, PREC_NONE},
     [TOKEN_ERROR] = {NULL, NULL, PREC_NONE},
     [TOKEN_EOF] = {NULL, NULL, PREC_NONE},
+    [TOKEN_COMMA] = {NULL, NULL, PREC_NONE},
+    [TOKEN_EXCL] = {NULL, NULL, PREC_NONE},
 };
 
 static Chunk *current_chunk() { return compiling_chunk; }
