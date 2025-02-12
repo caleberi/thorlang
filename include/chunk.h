@@ -17,6 +17,7 @@ typedef enum Opcode
     OP_DIVIDE,
     OP_NEGATE,
     OP_RETURN,
+    OP_TENARY,
 } Opcode;
 
 typedef struct Chunk
