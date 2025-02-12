@@ -191,7 +191,7 @@ Token scan_token()
         CASE_TOKEN('{', TOKEN_LEFT_BRACE);
         CASE_TOKEN('}', TOKEN_RIGHT_BRACE);
         CASE_TOKEN(';', TOKEN_SEMICOLON);
-        CASE_TOKEN('?', TOKEN_EXCL);
+        CASE_TOKEN('?', TOKEN_QUESTION);
         CASE_TOKEN(':', TOKEN_COLON);
         CASE_TOKEN('!', match('=') ? TOKEN_BANG_EQUAL : TOKEN_AND);
         CASE_TOKEN('=', match('=') ? TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
