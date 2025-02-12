@@ -26,7 +26,7 @@ typedef enum
     TOKEN_LESS,
     TOKEN_LESS_EQUAL,
 
-    TOKEN_EXCL,
+    TOKEN_QUESTION,
     TOKEN_COLON,
 
     // Literals
