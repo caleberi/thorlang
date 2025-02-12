@@ -39,5 +39,8 @@ void generate_ast(const char *path)
     fclose(fp);
 
     // TODO:  read the scanner from the
-    Scanner scanner = {.current = -1, .line = 0, .start = buffer};
+    Scanner scanner = {
+        .current = -1,
+        .line = 0,
+        .start = buffer};
 }
