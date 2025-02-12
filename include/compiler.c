@@ -150,7 +150,6 @@ static void number()
 static void expression()
 {
     parse_precedence(PREC_ASSIGNMENT);
-    consume(TOKEN_SEMICOLON, "Expected ';' after expression");
 }
 
 static void grouping()
