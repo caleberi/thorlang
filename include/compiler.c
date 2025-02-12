@@ -45,8 +45,8 @@ ParseRule rules[] = {
     [TOKEN_WHILE] = {NULL, NULL, PREC_NONE},
     [TOKEN_ERROR] = {NULL, NULL, PREC_NONE},
     [TOKEN_EOF] = {NULL, NULL, PREC_NONE},
+    [TOKEN_QUESTION] = {NULL, ternary, PREC_CONDITIONAL},
     [TOKEN_COMMA] = {NULL, NULL, PREC_NONE},
-    [TOKEN_EXCL] = {NULL, NULL, PREC_NONE},
 };
 
 static Chunk *current_chunk() { return compiling_chunk; }
@@ -150,12 +150,21 @@ static void number()
 static void expression()
 {
     parse_precedence(PREC_ASSIGNMENT);
+    consume(TOKEN_SEMICOLON, "Expected ';' after expression");
 }
 
 static void grouping()
 {
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expected ')' after expression");
+}
+
+static void ternary()
+{
+    parse_precedence(PREC_CONDITIONAL);
+    consume(TOKEN_COLON, "Expected ':' after expression");
+    parse_precedence(PREC_CONDITIONAL);
+    emit_byte_code(OP_TENARY);
 }
 
 static void unary()
