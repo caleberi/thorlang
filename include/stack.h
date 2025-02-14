@@ -19,7 +19,7 @@
     int size_##name(name *s);       \
     void push_##name(name *s, T);   \
     T pop_##name(name *s);          \
-    T *top_##name(name *s);         \
+    T peek_##name(name *s, int);    \
     void free_##name(name *s);      \
     void reset_##name(name *s)
 
@@ -51,7 +51,10 @@
         s->top++;                                                                                          \
         s->size++;                                                                                         \
     }                                                                                                      \
-    VT *top_##T(stack *s) { return s->top - 1; }                                                           \
+    VT peek_##T(stack *s, int distance)                                                                    \
+    {                                                                                                      \
+        return s->top[-1 - distance];                                                                      \
+    }                                                                                                      \
     VT pop_##T(stack *s)                                                                                   \
     {                                                                                                      \
         if (is_empty_##T(s))                                                                               \
