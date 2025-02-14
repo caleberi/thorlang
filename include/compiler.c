@@ -143,8 +143,8 @@ static emit_constant(Value value)
 
 static void number()
 {
-    double value = strtod(parser.current.start, NULL);
-    emit_constant(value);
+    double v = strtod(parser.current.start, NULL);
+    emit_constant(NUMBER_VAL(v));
 }
 
 static void expression()
