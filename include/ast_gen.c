@@ -43,4 +43,8 @@ void generate_ast(const char *path)
         .current = -1,
         .line = 0,
         .start = buffer};
+
+    Tokens tks;
+    init_Tokens(&tks);
+    scan_tokens(&scanner, &tks.entries);
 }
