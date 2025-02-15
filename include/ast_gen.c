@@ -151,7 +151,6 @@ void generate_ast(const char *path)
     buffer[bytes_read] = '\0';
     fclose(fp);
 
-    // TODO:  read the scanner from the
     Scanner scanner = {
         .current = -1,
         .line = 0,
