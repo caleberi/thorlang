@@ -10,6 +10,114 @@ static void check_error(size_t actual, size_t expected, const char *message, con
     }
 }
 
+static Token emit_token(Scanner *scanner, TokenType type)
+{
+    Token token = {};
+    token.type = type;
+    token.start = scanner->current;
+    token.length = (int)(scanner->current - scanner->start);
+    token.line = scanner->line;
+    return token;
+}
+
+static bool is_at_end(Scanner *scanner) { return *(scanner->current) == '\0'; }
+static char advance(Scanner *scanner)
+{
+    scanner->current++;
+    return *(scanner->current - 1);
+}
+
+static bool skip_whitespace(Scanner *scanner, char c)
+{
+    bool ret = true;
+    switch (c)
+    {
+    case ' ':
+    case '\r':
+    case '\t':
+        return ret;
+    case '\n':
+        scanner->line++;
+        return ret;
+    }
+    return !ret;
+}
+
+static Token identifier(Scanner *scanner)
+{
+}
+
+static Token number(Scanner *scanner)
+{
+}
+
+static Token string(Scanner *scanner)
+{
+}
+
+static bool match(Scanner *scanner, char expected)
+{
+}
+
+static void scan_tokens(Scanner *scanner, Tokens *tokens)
+{
+    scanner->start = scanner->current;
+#define CASE_TOKEN(c, t)             \
+    case c:                          \
+    {                                \
+        write_Tokens(                \
+            tokens->entries,         \
+            emit_token(scanner, t)); \
+    }
+
+    for (;;)
+    {
+        char c = advance(scanner);
+        if (is_at_end(scanner))
+            break;
+        if (skip_whitespace(scanner, c))
+            continue;
+        if (is_alpha(c))
+        {
+            write_Tokens(scanner, identifier(scanner));
+            continue;
+        }
+        if (is_digit(c))
+        {
+            write_Tokens(scanner, number(scanner));
+            continue;
+        }
+        switch (c)
+        {
+            CASE_TOKEN('.', TOKEN_DOT);
+            CASE_TOKEN(',', TOKEN_COMMA);
+            CASE_TOKEN('-', TOKEN_MINUS);
+            CASE_TOKEN('+', TOKEN_PLUS);
+            CASE_TOKEN('/', TOKEN_SLASH);
+            CASE_TOKEN('*', TOKEN_STAR);
+            CASE_TOKEN('(', TOKEN_LEFT_PAREN);
+            CASE_TOKEN(')', TOKEN_RIGHT_PAREN);
+            CASE_TOKEN('{', TOKEN_LEFT_BRACE);
+            CASE_TOKEN('}', TOKEN_RIGHT_BRACE);
+            CASE_TOKEN(';', TOKEN_SEMICOLON);
+            CASE_TOKEN('?', TOKEN_QUESTION);
+            CASE_TOKEN(':', TOKEN_COLON);
+            CASE_TOKEN('!', match(scanner, '=') ? TOKEN_BANG_EQUAL : TOKEN_AND);
+            CASE_TOKEN('=', match(scanner, '=') ? TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
+            CASE_TOKEN('<', match(scanner, '=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
+            CASE_TOKEN('>', match(scanner, '=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
+        case '"':
+            return write_Tokens(tokens->entries, emit_token(scanner, TOKEN_STRING));
+        case '#': // comment
+            while (peek() != '\n' && !is_at_end(scanner))
+                advance(scanner);
+            break;
+        }
+#undef CASE_TOKEN
+        return;
+    }
+}
+
 void generate_ast(const char *path)
 {
     FILE *fp = fopen(path, "rb");
