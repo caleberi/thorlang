@@ -1,5 +1,10 @@
 #include "common.h"
 #include "scanner.h"
+#include "memory.h"
+
+INIT_ARRAY(Tokens, Token);
+GENERIC_ARRAY_OPS(Tokens, Token);
+GENERIC_ARRAY_IMPL(Tokens, Token, array, token);
 
 static void check_error(size_t actual, size_t expected, const char *message, const char *path)
 {
