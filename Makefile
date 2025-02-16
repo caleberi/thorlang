@@ -1,6 +1,6 @@
 # Compiler settings
 CC = gcc
-CFLAGS = -Wall -Wextra -I./include
+CFLAGS = -fshort-enums -Wall -Wextra -I./include
 
 # Source files
 SRC_DIR = include

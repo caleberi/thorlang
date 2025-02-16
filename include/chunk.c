@@ -17,27 +17,27 @@ void init_chunk(Chunk *chunk)
     init_value_array(&chunk->constants);
 }
 
-// static void compress_line(Chunk *chunk, int line)
-// {
-//     if (chunk->count > 0)
-//     {
-//         int prev_line = chunk->lines.entries[chunk->lines.count - 1] & LINE_MASK;
-//         int prev_freq = chunk->lines.entries[chunk->lines.count - 1] >> FREQ_SHIFT;
+static void compress_line(Chunk *chunk, int line)
+{
+    if (chunk->count > 0)
+    {
+        int prev_line = chunk->lines.entries[chunk->lines.count - 1] & LINE_MASK;
+        int prev_freq = chunk->lines.entries[chunk->lines.count - 1] >> FREQ_SHIFT;
 
-//         if (prev_line == line)
-//         {
-//             chunk->lines.entries[chunk->lines.count - 1] = ((prev_freq + 1) << FREQ_SHIFT) | (prev_line & LINE_MASK);
-//             return;
-//         }
-//     }
-//     chunk->lines.entries[chunk->lines.count] = (1 << FREQ_SHIFT) | line;
-//     chunk->lines.count++;
-// }
+        if (prev_line == line)
+        {
+            chunk->lines.entries[chunk->lines.count - 1] = ((prev_freq + 1) << FREQ_SHIFT) | (prev_line & LINE_MASK);
+            return;
+        }
+    }
+    chunk->lines.entries[chunk->lines.count] = (1 << FREQ_SHIFT) | line;
+    chunk->lines.count++;
+}
 
-// int get_frequency(Chunk *chunk, int index)
-// {
-//     return chunk->lines.entries[index] >> FREQ_SHIFT;
-// }
+int get_frequency(Chunk *chunk, int index)
+{
+    return chunk->lines.entries[index] >> FREQ_SHIFT;
+}
 
 int get_line(Chunk *chunk, int index)
 {
