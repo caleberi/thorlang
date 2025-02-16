@@ -32,6 +32,13 @@ static char advance(Scanner *scanner)
     return *(scanner->current - 1);
 }
 
+static char peek(Scanner *scanner)
+{
+    if (!is_at_end(scanner))
+        return '\0';
+    return scanner->current[1];
+}
+
 static bool skip_whitespace(Scanner *scanner, char c)
 {
     bool ret = true;
