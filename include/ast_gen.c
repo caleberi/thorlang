@@ -1,10 +1,13 @@
 #include "common.h"
 #include "scanner.h"
 #include "memory.h"
+#include "string.h"
 
 INIT_ARRAY(Tokens, Token);
 GENERIC_ARRAY_OPS(Tokens, Token);
 GENERIC_ARRAY_IMPL(Tokens, Token, array, token);
+
+bool has_error = false;
 
 static void check_error(size_t actual, size_t expected, const char *message, const char *path)
 {
@@ -32,7 +35,8 @@ static char advance(Scanner *scanner)
     return *(scanner->current - 1);
 }
 
-static char peek(Scanner *scanner)
+static char peek(Scanner *scanner) { return scanner->current; }
+static char peek_next(Scanner *scanner)
 {
     if (!is_at_end(scanner))
         return '\0';
@@ -55,28 +59,39 @@ static bool skip_whitespace(Scanner *scanner, char c)
     return !ret;
 }
 
-static bool is_digit(Scanner *scanner)
-{
-    while (peek(scanner) >= '0' && peek(scanner) <= '9')
-        advance(scanner);
-}
+static bool is_digit(char c) { return c >= '0' && c <= '9'; }
+static bool is_alpha(char c) { return c <= 'a' && c >= 'z' || c >= 'A' && c <= 'Z'; }
 
-static bool is_alpha(Scanner *scanner)
+static TokenType identifier_type(Scanner *scanner)
 {
-    while (peek(scanner) <= 'a' && peek(scanner) <= 'Z')
-        advance(scanner);
+    int length = scanner->current - scanner->start;
+    char *word = (char *)malloc(sizeof(char) * ((length) + 1));
+    memcpy(word, scanner->start, length);
+    word[length + 1] = '\0';
+    SearchResult result = search_trie(&trie, word);
+    if (!result.found)
+        return TOKEN_IDENTIFIER;
+    return result.type;
 }
-
-static bool is_alpha_numeric(Scanner *scanner) { return is_digit(scanner) && is_alpha(scanner); }
 
 static Token identifier(Scanner *scanner)
 {
+    while ((is_alpha(peek(scanner)) || is_digit(peek(scanner))))
+        advance(scanner);
+    return emit_token(scanner, identifier_type(scanner));
 }
 
 static Token number(Scanner *scanner)
 {
-    while (peek(scanner) <= 'a' && peek(scanner) <= 'Z')
+    while (is_digit(peek(scanner)))
         advance(scanner);
+    if (peek(scanner) == '.' && is_digit(peek_next(scanner)))
+    {
+        advance(scanner);
+        while (is_digit(peek(scanner)))
+            advance(scanner);
+    }
+    return emit_token(scanner, TOKEN_NUMBER);
 }
 
 static Token string(Scanner *scanner)
@@ -95,6 +110,7 @@ static bool match(Scanner *scanner, char expected)
 
 static void scan_tokens(Scanner *scanner, Tokens *tokens)
 {
+    boostrap_keyword();
     scanner->start = scanner->current;
 #define CASE_TOKEN(c, t)             \
     case c:                          \
@@ -106,6 +122,10 @@ static void scan_tokens(Scanner *scanner, Tokens *tokens)
 
     for (;;)
     {
+        if (has_error)
+        {
+            exit(1);
+        }
         char c = advance(scanner);
         if (is_at_end(scanner))
             break;
@@ -150,6 +170,7 @@ static void scan_tokens(Scanner *scanner, Tokens *tokens)
 #undef CASE_TOKEN
         return;
     }
+    cleanup_keyword();
 }
 
 void generate_ast(const char *path)
