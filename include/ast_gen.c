@@ -55,12 +55,28 @@ static bool skip_whitespace(Scanner *scanner, char c)
     return !ret;
 }
 
+static bool is_digit(Scanner *scanner)
+{
+    while (peek(scanner) >= '0' && peek(scanner) <= '9')
+        advance(scanner);
+}
+
+static bool is_alpha(Scanner *scanner)
+{
+    while (peek(scanner) <= 'a' && peek(scanner) <= 'Z')
+        advance(scanner);
+}
+
+static bool is_alpha_numeric(Scanner *scanner) { return is_digit(scanner) && is_alpha(scanner); }
+
 static Token identifier(Scanner *scanner)
 {
 }
 
 static Token number(Scanner *scanner)
 {
+    while (peek(scanner) <= 'a' && peek(scanner) <= 'Z')
+        advance(scanner);
 }
 
 static Token string(Scanner *scanner)
@@ -69,6 +85,12 @@ static Token string(Scanner *scanner)
 
 static bool match(Scanner *scanner, char expected)
 {
+    if (is_at_end(scanner))
+        return false;
+    if (peek(scanner) != expected)
+        return false;
+    advance(scanner);
+    return true;
 }
 
 static void scan_tokens(Scanner *scanner, Tokens *tokens)
@@ -121,7 +143,7 @@ static void scan_tokens(Scanner *scanner, Tokens *tokens)
         case '"':
             return write_Tokens(tokens->entries, emit_token(scanner, TOKEN_STRING));
         case '#': // comment
-            while (peek() != '\n' && !is_at_end(scanner))
+            while (peek(scanner) != '\n' && !is_at_end(scanner))
                 advance(scanner);
             break;
         }
