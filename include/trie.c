@@ -45,7 +45,7 @@ SearchResult search_trie(Trie *trie, const char *word)
         current = current->children[index];
     }
     result.type = current->type;
-    result.type = current != NULL && current->is_end_of_word;
+    result.found = current != NULL && current->is_end_of_word;
     return result;
 }
 

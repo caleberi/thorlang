@@ -1,7 +1,6 @@
 #ifndef _THOR_SCANNER_H_
 #define _THOR_SCANNER_H_
-
-typedef enum
+typedef enum TokenType
 {
     // Single character tokens
     TOKEN_LEFT_PAREN,

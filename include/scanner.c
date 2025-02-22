@@ -8,6 +8,7 @@
 #endif
 
 Scanner scanner;
+
 Trie trie;
 
 void boostrap_keyword()
