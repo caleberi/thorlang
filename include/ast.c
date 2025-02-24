@@ -293,11 +293,96 @@ static void scan_tokens(Scanner *scanner, Tokens *tokens)
     return;
 }
 
-typedef struct Parser
+typedef enum
+{
+    PARSER_SUCCESS,
+    PARSER_ERROR_UNEXPECTED_TOKEN,
+    PARSER_ERROR_EOF
+} ParserResult;
+
+typedef struct
 {
     Tokens *tokens;
-    int current;
+    size_t current;
+    ParserResult last_error;
 } Parser;
+
+ParserResult parser_get_error(const Parser *parser) { return parser ? parser->last_error : PARSER_ERROR_EOF; }
+void parser_reset_error(Parser *parser)
+{
+    if (parser)
+    {
+        parser->last_error = PARSER_SUCCESS;
+    }
+}
+Parser *parser_create(Tokens *tokens)
+{
+    Parser *parser = malloc(sizeof(Parser));
+    if (!parser)
+        return NULL;
+
+    parser->tokens = tokens;
+    parser->current = 0;
+    parser->last_error = PARSER_SUCCESS;
+    return parser;
+}
+
+void parser_destroy(Parser *parser)
+{
+    if (!parser)
+        return;
+    free_Tokens(parser->tokens);
+    free(parser);
+}
+
+bool parser_is_at_end(const Parser *parser)
+{
+    if (!parser)
+        return true;
+    return parser->current >= parser->tokens->count ||
+           parser_peek(parser).type == TOKEN_EOF;
+}
+
+Token parser_advance(Parser *parser)
+{
+    if (!parser_is_at_end(parser))
+        parser->current++;
+
+    return parser_peek(parser);
+}
+
+Token parser_peek(const Parser *parser)
+{
+    if (!parser || parser_is_at_end(parser))
+    {
+        return (Token){.type = TOKEN_EOF};
+    }
+    return parser->tokens->entries[parser->current];
+}
+
+bool parser_match(Parser *parser, TokenType type)
+{
+    if (!parser || parser_is_at_end(parser))
+        return false;
+
+    if (parser_peek(parser).type == type)
+    {
+        parser_advance(parser);
+        return true;
+    }
+    return false;
+}
+
+ParserResult parser_consume(Parser *parser, TokenType expected_type, const char *error_message)
+{
+    if (parser_match(parser, expected_type))
+    {
+        return PARSER_SUCCESS;
+    }
+
+    parser->last_error = PARSER_ERROR_UNEXPECTED_TOKEN;
+    return parser->last_error;
+}
 
 void generate_ast(const char *path)
 {
