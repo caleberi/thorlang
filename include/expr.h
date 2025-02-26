@@ -49,6 +49,8 @@ typedef enum NumberType
     typedef struct name##Expr name##Expr;
 
 DEFINE_EXPR_TYPES(EXPR_STRUCT_FORWARD_DECL)
+
+typedef struct Expr Expr;
 #define EXPR_STRUCT_DEF(name, fields) \
     struct name##Expr                 \
     {                                 \
