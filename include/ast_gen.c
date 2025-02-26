@@ -5,6 +5,9 @@
 #include "trie.h"
 #include "expr.h"
 
+// #define DEBUG_EXPR_TREE_S_FORMAT
+#define DEBUG_EXPR_TREE
+
 #define MEM_CHECK(variable, action, ...)                                 \
     if (variable == NULL)                                                \
     {                                                                    \
@@ -56,12 +59,17 @@
     X(TOKEN_ERROR, "ERROR")                 \
     X(TOKEN_EOF, "EOF")
 
+static void print_expr(Expr *expr, int indent);
+static void print_indent(int indent);
+static const char *token_type_to_string(TokenType type);
+static void print_expr_as_s_expr(Expr *expr);
+
 Trie trie;
 INIT_ARRAY(Tokens, Token);
 GENERIC_ARRAY_OPS(Tokens, Token);
 GENERIC_ARRAY_IMPL(Tokens, Token, array, token);
 
-const char *token_type_to_string(TokenType type)
+static const char *token_type_to_string(TokenType type)
 {
     switch (type)
     {
@@ -280,7 +288,8 @@ static void scan_tokens(Scanner *scanner, Tokens *tokens)
             CASE_TOKEN('<', match(scanner, '=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
             CASE_TOKEN('>', match(scanner, '=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
         case '"':
-            string(scanner);
+            write_Tokens(tokens, string(scanner));
+            continue;
         case '#': // comment
             while (peek(scanner) != '\n' && !is_at_end(scanner))
                 advance(scanner);
@@ -303,22 +312,39 @@ typedef enum
 typedef struct
 {
     Tokens *tokens;
-    size_t current;
+    int current;
     ParserResult last_error;
 } Parser;
+
+static Expr *parse_equality(Parser *parser);
+static Expr *parse_comparison(Parser *parser);
+static Expr *parse_term(Parser *parser);
+static Expr *parse_factor(Parser *parser);
+static Expr *parse_unary(Parser *parser);
+static Expr *parse_primary(Parser *parser);
+static char *parse_lexeme(Token);
+static Token parser_peek(const Parser *parser);
+
+static char *parse_lexeme(Token token)
+{
+    char *lexeme = malloc(sizeof(char) * (token.length + 1));
+    MEM_CHECK(lexeme, return, NULL);
+    memcpy(lexeme, token.start, token.length);
+    lexeme[token.length] = '\0';
+    return lexeme;
+}
 
 ParserResult parser_get_error(const Parser *parser) { return parser ? parser->last_error : PARSER_ERROR_EOF; }
 void parser_reset_error(Parser *parser)
 {
-    if (parser)
-    {
+    if (parser != NULL)
         parser->last_error = PARSER_SUCCESS;
-    }
 }
+
 Parser *parser_create(Tokens *tokens)
 {
     Parser *parser = malloc(sizeof(Parser));
-    if (!parser)
+    if (parser == NULL)
         return NULL;
 
     parser->tokens = tokens;
@@ -329,47 +355,38 @@ Parser *parser_create(Tokens *tokens)
 
 void parser_destroy(Parser *parser)
 {
-    if (!parser)
+    if (parser == NULL)
         return;
     free_Tokens(parser->tokens);
+    parser->tokens = NULL;
     free(parser);
 }
 
 bool parser_is_at_end(const Parser *parser)
 {
-    if (!parser)
-        return true;
-    return parser->current >= parser->tokens->count ||
-           parser_peek(parser).type == TOKEN_EOF;
+    if (parser == NULL)
+        return false;
+    return parser->current >= parser->tokens->count || parser_peek(parser).type == TOKEN_EOF;
 }
 
-Token parser_advance(Parser *parser)
+void parser_advance(Parser *parser)
 {
     if (!parser_is_at_end(parser))
         parser->current++;
-
-    return parser_peek(parser);
 }
 
 Token parser_peek(const Parser *parser)
 {
-    if (!parser || parser_is_at_end(parser))
-    {
-        return (Token){.type = TOKEN_EOF};
-    }
     return parser->tokens->entries[parser->current];
 }
 
 bool parser_match(Parser *parser, TokenType type)
 {
-    if (!parser || parser_is_at_end(parser))
+    if (parser == NULL || parser_is_at_end(parser))
         return false;
 
     if (parser_peek(parser).type == type)
-    {
-        parser_advance(parser);
         return true;
-    }
     return false;
 }
 
@@ -377,11 +394,207 @@ ParserResult parser_consume(Parser *parser, TokenType expected_type, const char 
 {
     if (parser_match(parser, expected_type))
     {
+        parser_advance(parser);
         return PARSER_SUCCESS;
     }
 
     parser->last_error = PARSER_ERROR_UNEXPECTED_TOKEN;
+    printf("[ERROR]: %s\n", error_message);
     return parser->last_error;
+}
+
+static Expr *create_binary_expr(Expr *left, TokenType op, Expr *right)
+{
+    Expr *expr = malloc(sizeof(Expr));
+    if (expr == NULL)
+        return NULL;
+
+    expr->tag = EXPR_BINARY;
+    expr->as.binary.left = left;
+    expr->as.binary.right = right;
+    expr->as.binary.op = op;
+    return expr;
+}
+
+static Expr *create_unary_expr(TokenType op, Expr *right)
+{
+    Expr *expr = malloc(sizeof(Expr));
+    if (expr == NULL)
+        return NULL;
+
+    expr->tag = EXPR_UNARY;
+    expr->as.unary.op = op;
+    expr->as.unary.expr = right;
+    return expr;
+}
+
+Expr *parse_expression(Parser *parser) { return parse_equality(parser); }
+
+// Equailty -> Comparison (( "!=" | "==" ) Comparison)*
+static Expr *parse_equality(Parser *parser)
+{
+    Expr *expr = parse_comparison(parser);
+    if (expr == NULL)
+        return NULL;
+
+    while (parser_match(parser, TOKEN_BANG_EQUAL) ||
+           parser_match(parser, TOKEN_EQUAL_EQUAL))
+    {
+        TokenType op = parser_peek(parser).type;
+        parser_advance(parser);
+        Expr *right = parse_comparison(parser);
+        if (right == NULL)
+            return NULL;
+        expr = create_binary_expr(expr, op, right);
+    }
+    return expr;
+}
+
+// Comparison -> Term ((">" | ">=" | "<" | "<=") Term)*
+static Expr *parse_comparison(Parser *parser)
+{
+    Expr *expr = parse_term(parser);
+    if (expr == NULL)
+        return NULL;
+
+    while (parser_match(parser, TOKEN_GREATER) ||
+           parser_match(parser, TOKEN_GREATER_EQUAL) ||
+           parser_match(parser, TOKEN_LESS) ||
+           parser_match(parser, TOKEN_LESS_EQUAL))
+    {
+        TokenType op = parser_peek(parser).type;
+        parser_advance(parser);
+        Expr *right = parse_term(parser);
+        if (right == NULL)
+            return NULL;
+        expr = create_binary_expr(expr, op, right);
+    }
+    return expr;
+}
+
+// Term -> Factor (("-" | "+") Factor)*
+static Expr *parse_term(Parser *parser)
+{
+    Expr *expr = parse_factor(parser);
+    if (expr == NULL)
+        return NULL;
+
+    while (parser_match(parser, TOKEN_MINUS) ||
+           parser_match(parser, TOKEN_PLUS))
+    {
+        TokenType op = parser_peek(parser).type;
+        parser_advance(parser);
+        Expr *right = parse_factor(parser);
+        if (right == NULL)
+            return NULL;
+        expr = create_binary_expr(expr, op, right);
+    }
+    return expr;
+}
+
+// Factor -> Unary (("/" | "*") Unary)*
+static Expr *parse_factor(Parser *parser)
+{
+    Expr *expr = parse_unary(parser);
+    if (expr == NULL)
+        return NULL;
+
+    while (parser_match(parser, TOKEN_SLASH) ||
+           parser_match(parser, TOKEN_STAR))
+    {
+        TokenType op = parser_peek(parser).type;
+        parser_advance(parser);
+        Expr *right = parse_unary(parser);
+        if (right == NULL)
+            return NULL;
+        expr = create_binary_expr(expr, op, right);
+    }
+    return expr;
+}
+
+// Unary -> ("!" | "-") Unary | Primary
+static Expr *parse_unary(Parser *parser)
+{
+    if (parser_match(parser, TOKEN_BANG) ||
+        parser_match(parser, TOKEN_MINUS))
+    {
+        TokenType op = parser_peek(parser).type;
+        parser_advance(parser);
+        Expr *right = parse_unary(parser);
+        if (right == NULL)
+            return NULL;
+        return create_unary_expr(op, right);
+    }
+    return parse_primary(parser);
+}
+
+static Expr *parse_primary(Parser *parser)
+{
+    Expr *expr = malloc(sizeof(Expr));
+    if (expr == NULL)
+        return NULL;
+
+    if (parser_match(parser, TOKEN_NUMBER))
+    {
+        Token token = parser_peek(parser);
+        expr->tag = EXPR_NUMBER;
+        expr->as.number.type = DOUBLE;
+        char *lexeme = parse_lexeme(token);
+        expr->as.number.v.dvalue = atof(lexeme);
+        free(lexeme);
+        parser_advance(parser);
+        return expr;
+    }
+
+    if (parser_match(parser, TOKEN_STRING))
+    {
+        Token token = parser_peek(parser);
+        expr->tag = EXPR_STRING;
+        char *lexeme = parse_lexeme(token);
+        expr->as.string.value = strdup(lexeme);
+        free(lexeme);
+        parser_advance(parser);
+        return expr;
+    }
+
+    if (parser_match(parser, TOKEN_TRUE))
+    {
+        expr->tag = EXPR_TRUE;
+        parser_advance(parser);
+        return expr;
+    }
+
+    if (parser_match(parser, TOKEN_FALSE))
+    {
+        expr->tag = EXPR_FALSE;
+        parser_advance(parser);
+        return expr;
+    }
+
+    if (parser_match(parser, TOKEN_NIL))
+    {
+        expr->tag = EXPR_NIL;
+        parser_advance(parser);
+        return expr;
+    }
+
+    if (parser_match(parser, TOKEN_LEFT_PAREN))
+    {
+        parser_advance(parser);
+        Expr *inside = parse_expression(parser);
+        if (inside == NULL || parser_consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after expression.") != PARSER_SUCCESS)
+        {
+            free(expr);
+            return NULL;
+        }
+        expr->tag = EXPR_GROUPING;
+        expr->as.group.expr = inside;
+        return expr;
+    }
+
+    free(expr);
+    parser->last_error = PARSER_ERROR_UNEXPECTED_TOKEN;
+    return NULL;
 }
 
 void generate_ast(const char *path)
@@ -444,8 +657,175 @@ void generate_ast(const char *path)
         free(lexeme);
     }
 
+    Parser *parser = parser_create(&tks);
+    Expr *expr = parse_expression(parser);
+    if (expr != NULL)
+    {
+#ifdef DEBUG_EXPR_TREE_S_FORMAT
+        print_expr_as_s_expr(expr);
+#endif
+
+#ifdef DEBUG_EXPR_TREE
+        print_expr(expr, 1);
+#endif
+        printf("\n");
+        free(expr);
+    }
     free(buffer);
-    free_Tokens(&tks);
+    parser_destroy(parser);
+}
+
+void print_expr(Expr *expr, int indent)
+{
+    if (!expr)
+    {
+        printf("NULL\n");
+        return;
+    }
+
+    print_indent(indent);
+
+    switch (expr->tag)
+    {
+    case EXPR_BINARY:
+        printf("Binary Expression:\n");
+        print_indent(indent + 2);
+        printf("Operator: %s\n", token_type_to_string(expr->as.binary.op));
+        print_indent(indent + 2);
+        printf("Left:\n");
+        print_expr(expr->as.binary.left, indent + 4);
+        print_indent(indent + 2);
+        printf("Right:\n");
+        print_expr(expr->as.binary.right, indent + 4);
+        break;
+
+    case EXPR_UNARY:
+        printf("Unary Expression:\n");
+        print_indent(indent + 2);
+        printf("Operator: %s\n", token_type_to_string(expr->as.unary.op));
+        print_indent(indent + 2);
+        printf("Operand:\n");
+        print_expr(expr->as.unary.expr, indent + 4);
+        break;
+
+    case EXPR_GROUPING:
+        printf("Grouping Expression:\n");
+        print_indent(indent + 2);
+        printf("Expression:\n");
+        print_expr(expr->as.group.expr, indent + 4);
+        break;
+
+    case EXPR_NUMBER:
+        printf("Number: ");
+        switch (expr->as.number.type)
+        {
+        case INT:
+            printf("%d\n", expr->as.number.v.ivalue);
+            break;
+        case FLOAT:
+            printf("%f\n", expr->as.number.v.fvalue);
+            break;
+        case DOUBLE:
+            printf("%f\n", expr->as.number.v.dvalue);
+            break;
+        }
+        break;
+
+    case EXPR_STRING:
+        printf("String: \"%s\"\n", expr->as.string.value);
+        break;
+
+    case EXPR_TRUE:
+        printf("Boolean: true\n");
+        break;
+
+    case EXPR_FALSE:
+        printf("Boolean: false\n");
+        break;
+
+    case EXPR_NIL:
+        printf("nil\n");
+        break;
+
+    default:
+        printf("Unknown expression type: %d\n", expr->tag);
+        break;
+    }
+}
+
+void print_expr_as_s_expr(Expr *expr)
+{
+    if (expr == NULL)
+    {
+        printf("nil");
+        return;
+    }
+
+    switch (expr->tag)
+    {
+    case EXPR_BINARY:
+        printf("(%s ", token_type_to_string(expr->as.binary.op));
+        print_expr_as_s_expr(expr->as.binary.left);
+        printf(" ");
+        print_expr_as_s_expr(expr->as.binary.right);
+        printf(")");
+        break;
+
+    case EXPR_UNARY:
+        printf("(%s ", token_type_to_string(expr->as.unary.op));
+        print_expr_as_s_expr(expr->as.unary.expr);
+        printf(")");
+        break;
+
+    case EXPR_GROUPING:
+        printf("(group ");
+        print_expr_as_s_expr(expr->as.group.expr);
+        printf(")");
+        break;
+
+    case EXPR_NUMBER:
+        switch (expr->as.number.type)
+        {
+        case INT:
+            printf("%d", expr->as.number.v.ivalue);
+            break;
+        case FLOAT:
+            printf("%f", expr->as.number.v.fvalue);
+            break;
+        case DOUBLE:
+            printf("%f", expr->as.number.v.dvalue);
+            break;
+        }
+        break;
+
+    case EXPR_STRING:
+        printf("\"%s\"", expr->as.string.value);
+        break;
+
+    case EXPR_TRUE:
+        printf("true");
+        break;
+
+    case EXPR_FALSE:
+        printf("false");
+        break;
+
+    case EXPR_NIL:
+        printf("nil");
+        break;
+
+    default:
+        printf("unknown");
+        break;
+    }
+}
+
+static void print_indent(int indent)
+{
+    for (int i = 0; i < indent; i++)
+    {
+        putchar(' ');
+    }
 }
 
 void write_test_file(const char *content, const char *filename)
@@ -458,6 +838,17 @@ void write_test_file(const char *content, const char *filename)
     }
     fprintf(fp, "%s", content);
     fclose(fp);
+}
+
+void test_simple_expression_tokens()
+{
+    printf("Testing simple expression tokens...\n");
+    const char *test_input =
+        "(( -5 + 8 ) * 9) + 1238.348 - 20;\n";
+
+    write_test_file(test_input, "test_simple_expression.txt");
+    generate_ast("test_simple_expression.txt");
+    printf("Basic simple test completed\n\n");
 }
 
 void test_basic_tokens()
@@ -540,12 +931,12 @@ void test_complex_code()
 int main()
 {
     printf("Starting scanner tests...\n\n");
-
-    test_basic_tokens();
-    test_numbers_and_strings();
-    test_operators();
-    test_comments();
-    test_complex_code();
+    test_simple_expression_tokens();
+    // test_basic_tokens();
+    // test_numbers_and_strings();
+    // test_operators();
+    // test_comments();
+    // test_complex_code();
 
     printf("All scanner tests completed.\n");
     return 0;
