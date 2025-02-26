@@ -17,6 +17,7 @@ typedef enum ExprType
     EXPR_TRUE,
     EXPR_FALSE,
     EXPR_NIL,
+    EXPR_BINARY,
     EXPR_GROUPING
 } ExprType;
 
