@@ -1,5 +1,5 @@
-#include <check.h>
 #include "./include/chunk.h"
+#include <check.h>
 
 #define assert_chunk_init_details(chunk) \
     ck_assert(chunk.capacity == 0);      \
