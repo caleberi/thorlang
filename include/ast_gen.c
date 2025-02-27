@@ -72,6 +72,44 @@ Trie trie;
 INIT_ARRAY(Tokens, Token);
 GENERIC_ARRAY_OPS(Tokens, Token);
 GENERIC_ARRAY_IMPL(Tokens, Token, array, token);
+typedef enum
+{
+    PARSER_SUCCESS,
+    PARSER_ERROR_UNEXPECTED_TOKEN,
+    PARSER_ERROR_EOF
+} ParserResult;
+
+typedef struct
+{
+    Tokens *tokens;
+    int current;
+    ParserResult last_error;
+} Parser;
+
+static Expr *parse_equality(Parser *parser);
+static Expr *parse_comparison(Parser *parser);
+static Expr *parse_term(Parser *parser);
+static Expr *parse_factor(Parser *parser);
+static Expr *parse_unary(Parser *parser);
+static Expr *parse_primary(Parser *parser);
+static char *parse_lexeme(Token);
+static Token parser_peek(const Parser *parser);
+void parser_advance(Parser *parser);
+
+static Stmt *parse_declaration(Parser *parser);
+static Stmt *parse_statement(Parser *parser);
+static Stmt **parse_program(Parser *parser, int *count);
+static Stmt *parse_print_statement(Parser *parser);
+static Stmt *parse_debug_statement(Parser *parser);
+static Stmt *parse_block_statement(Parser *parser);
+static Stmt *parse_if_statement(Parser *parser);
+static Stmt *parse_while_statement(Parser *parser);
+static Stmt *parse_for_statement(Parser *parser);
+static Stmt *parse_var_declaration(Parser *parser);
+static Expr *parse_expression(Parser *parser);
+ParserResult parser_consume(Parser *parser, TokenType expected_type, const char *error_message);
+bool parser_is_at_end(const Parser *parser);
+bool parser_match(Parser *parser, TokenType type);
 
 static const char *token_type_to_string(TokenType type)
 {
