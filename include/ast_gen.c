@@ -745,7 +745,10 @@ static char *parse_lexeme(Token token)
     return lexeme;
 }
 
-ParserResult parser_get_error(const Parser *parser) { return parser ? parser->last_error : PARSER_ERROR_EOF; }
+ParserResult parser_get_error(const Parser *parser)
+{
+    return parser ? parser->last_error : PARSER_ERROR_EOF;
+}
 void parser_reset_error(Parser *parser)
 {
     if (parser != NULL)
