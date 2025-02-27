@@ -15,10 +15,10 @@ typedef enum StmtType
   STMT_FUNCTION,
   STMT_PRINT,
   STMT_BLOCK,
-  STMT_VAR_DECL
+  STMT_VAR_DECL,
+  STMT_DEBUG,
 } StmtType;
 
-struct Stmt;
 typedef struct Stmt Stmt;
 
 #define DEFINE_STMT_TYPES(V) \
@@ -50,6 +50,10 @@ typedef struct Stmt Stmt;
     int bodyCount;)          \
   V(Print,                   \
     Expr *expression;)       \
+  V(Debug,                   \
+    Expr *expression;        \
+    int line;                \
+    char *filename;)         \
   V(Block,                   \
     Stmt **statements;       \
     int count;)              \
@@ -84,6 +88,7 @@ struct Stmt
     PrintStmt printStmt;
     BlockStmt blockStmt;
     VarDeclStmt varDeclStmt;
+    DebugStmt debugStatement;
   } as;
 };
 
