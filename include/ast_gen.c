@@ -64,6 +64,9 @@ static void print_expr(Expr *expr, int indent);
 static void print_indent(int indent);
 static const char *token_type_to_string(TokenType type);
 static void print_expr_as_s_expr(Expr *expr);
+void print_stmt(Stmt *stmt, int indent);
+static void print_indent(int indent);
+void print_stmt_list(Stmt **statements, int count, int indent);
 
 Trie trie;
 INIT_ARRAY(Tokens, Token);
