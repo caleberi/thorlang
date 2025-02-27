@@ -345,28 +345,396 @@ static void scan_tokens(Scanner *scanner, Tokens *tokens)
     return;
 }
 
-typedef enum
+static Stmt *parse_declaration(Parser *parser)
 {
-    PARSER_SUCCESS,
-    PARSER_ERROR_UNEXPECTED_TOKEN,
-    PARSER_ERROR_EOF
-} ParserResult;
+    if (parser_match(parser, TOKEN_VAR))
+    {
+        parser_advance(parser);
+        return parse_var_declaration(parser);
+    }
+    return parse_statement(parser);
+}
 
-typedef struct
+static Stmt *parse_debug_statement(Parser *parser)
 {
-    Tokens *tokens;
-    int current;
-    ParserResult last_error;
-} Parser;
+    Expr *expr = parse_expression(parser);
+    if (expr == NULL)
+        return NULL;
 
-static Expr *parse_equality(Parser *parser);
-static Expr *parse_comparison(Parser *parser);
-static Expr *parse_term(Parser *parser);
-static Expr *parse_factor(Parser *parser);
-static Expr *parse_unary(Parser *parser);
-static Expr *parse_primary(Parser *parser);
-static char *parse_lexeme(Token);
-static Token parser_peek(const Parser *parser);
+    if (parser_consume(parser, TOKEN_SEMICOLON, "Expect ';' after value.") != PARSER_SUCCESS)
+    {
+        free(expr);
+        return NULL;
+    }
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    if (!stmt)
+        return NULL;
+
+    stmt->tag = STMT_DEBUG;
+    stmt->as.debugStatement.expression = expr;
+    stmt->as.debugStatement.line = parser_peek(parser).line;
+    return stmt;
+}
+
+static Stmt *parse_print_statement(Parser *parser)
+{
+    Expr *expr = parse_expression(parser);
+    if (expr == NULL)
+        return NULL;
+
+    if (parser_consume(parser, TOKEN_SEMICOLON, "Expect ';' after value.") != PARSER_SUCCESS)
+    {
+        free(expr);
+        return NULL;
+    }
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    if (!stmt)
+        return NULL;
+
+    stmt->tag = STMT_PRINT;
+    stmt->as.printStmt.expression = expr;
+    return stmt;
+}
+
+static Stmt *parse_block_statement(Parser *parser)
+{
+    int capacity = 8;
+    int stmt_count = 0;
+    Stmt **statements = malloc(sizeof(Stmt *) * capacity);
+    if (statements == NULL)
+        return NULL;
+
+    while (!parser_is_at_end(parser) && !parser_match(parser, TOKEN_RIGHT_BRACE))
+    {
+        Stmt *stmt = parse_declaration(parser);
+        if (stmt == NULL)
+        {
+            if (stmt_count >= capacity)
+            {
+                capacity *= 2;
+                statements = realloc(statements, sizeof(Stmt *) * ((capacity * 0.5) + 1));
+                if (!statements)
+                    return NULL;
+            }
+            statements[stmt_count++] = stmt;
+        }
+    }
+
+    if (parser_is_at_end(parser) && parser_peek(parser).type != TOKEN_RIGHT_BRACE)
+    {
+        parser->last_error = PARSER_ERROR_UNEXPECTED_TOKEN;
+        return NULL;
+    }
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    if (stmt == NULL)
+        return NULL;
+
+    stmt->tag = STMT_BLOCK;
+    stmt->as.blockStmt.statements = statements;
+    stmt->as.blockStmt.count = stmt_count;
+    return stmt;
+}
+
+static Stmt *parse_if_statement(Parser *parser)
+{
+    if (parser_consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'if'.") != PARSER_SUCCESS)
+        return NULL;
+
+    Expr *condition = parse_expression(parser);
+
+    if (condition == NULL)
+        return NULL;
+
+    if (parser_consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after condition.") != PARSER_SUCCESS)
+    {
+        free(condition);
+        return NULL;
+    }
+
+    Stmt *then_branch = parse_statement(parser);
+    if (then_branch == NULL)
+    {
+        free(condition);
+        return NULL;
+    }
+
+    Stmt *else_branch = NULL;
+    if (parser_match(parser, TOKEN_ELSE))
+    {
+        parser_advance(parser);
+        else_branch = parse_statement(parser);
+        if (else_branch == NULL)
+        {
+            free(condition);
+            free(else_branch);
+            return NULL;
+        }
+    }
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    if (stmt == NULL)
+        return NULL;
+
+    stmt->tag = STMT_IF;
+    stmt->as.ifStmt.condition = condition;
+    stmt->as.ifStmt.thenBranch = then_branch;
+    stmt->as.ifStmt.elseBranch = else_branch;
+    return stmt;
+}
+
+static Stmt *parse_while_statement(Parser *parser)
+{
+    if (parser_consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.") != PARSER_SUCCESS)
+        return NULL;
+    Expr *condition = parse_expression(parser);
+    if (condition == NULL)
+        return NULL;
+
+    if (parser_consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after condition.") != PARSER_SUCCESS)
+    {
+        free(condition);
+        return NULL;
+    }
+
+    Stmt *body = parse_statement(parser);
+    if (body == NULL)
+    {
+        free(condition);
+        return NULL;
+    }
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    if (stmt == NULL)
+        return NULL;
+
+    stmt->tag = STMT_WHILE;
+    stmt->as.whileStmt.condition = condition;
+    stmt->as.whileStmt.body = body;
+    return stmt;
+}
+
+static Stmt *parse_for_statement(Parser *parser)
+{
+    if (parser_consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.") != PARSER_SUCCESS)
+        return NULL;
+
+    Stmt *initializer = NULL;
+    if (parser_match(parser, TOKEN_SEMICOLON))
+        parser_advance(parser);
+    else if (parser_match(parser, TOKEN_VAR))
+    {
+        parser_advance(parser);
+        initializer = parse_var_declaration(parser);
+        if (initializer == NULL)
+            return NULL;
+    }
+    else
+    {
+        Expr *init_expr = parse_expression(parser);
+        if (init_expr == NULL)
+            return NULL;
+
+        if (parser_consume(parser, TOKEN_SEMICOLON, "Expect ';' after for-loop initializer.") != PARSER_SUCCESS)
+        {
+            free(init_expr);
+            return NULL;
+        }
+    }
+
+    Expr *condition = NULL;
+    if (!parser_match(parser, TOKEN_SEMICOLON))
+    {
+        parser_advance(parser);
+        condition = parse_expression(parser);
+        if (condition == NULL)
+        {
+            free(initializer);
+            return NULL;
+        }
+    }
+
+    if (parser_consume(parser, TOKEN_SEMICOLON, "Expect ';' after for-loop condition.") != PARSER_SUCCESS)
+    {
+        free(initializer);
+        free(condition);
+        return NULL;
+    }
+
+    Expr *increment = NULL;
+    if (!parser_match(parser, TOKEN_RIGHT_PAREN))
+    {
+        parser_advance(parser);
+        increment = parse_expression(parser);
+        if (increment == NULL)
+        {
+            free(condition);
+            free(initializer);
+            return NULL;
+        }
+    }
+
+    if (parser_consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after for-loop clauses.") != PARSER_SUCCESS)
+    {
+        free(increment);
+        free(condition);
+        free(initializer);
+        return NULL;
+    }
+
+    Stmt *body = parse_statement(parser);
+    if (body == NULL)
+    {
+        free(increment);
+        free(condition);
+        free(initializer);
+        return NULL;
+    }
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    if (stmt == NULL)
+    {
+        free(increment);
+        free(condition);
+        free(initializer);
+        free(body);
+        return NULL;
+    }
+
+    stmt->tag = STMT_FOR;
+    stmt->as.forStmt.initializer = initializer;
+    stmt->as.forStmt.condition = condition;
+    stmt->as.forStmt.increment = increment;
+    stmt->as.forStmt.body = body;
+
+    return stmt;
+}
+
+static Stmt *parse_var_declaration(Parser *parser)
+{
+    if (parser_consume(parser, TOKEN_IDENTIFIER, "Expect variable name.") != PARSER_SUCCESS)
+        return NULL;
+
+    Token name = parser_peek(parser);
+    parser_advance(parser);
+
+    Expr *initializer = NULL;
+    if (parser_match(parser, TOKEN_EQUAL))
+    {
+        parser_advance(parser);
+        initializer = parse_expression(parser);
+        if (!initializer)
+            return NULL;
+    }
+
+    if (parser_consume(parser, TOKEN_SEMICOLON, "Expect ';' after variable declaration.") != PARSER_SUCCESS)
+    {
+        free(initializer);
+        return NULL;
+    }
+
+    Stmt *stmt = malloc(sizeof(Stmt));
+    if (!stmt)
+        return NULL;
+
+    stmt->tag = STMT_VAR_DECL;
+    stmt->as.varDeclStmt.name = name;
+    stmt->as.varDeclStmt.initializer = initializer;
+
+    return stmt;
+}
+
+static Stmt *parse_statement(Parser *parser)
+{
+    if (parser_match(parser, TOKEN_PRINT))
+    {
+        parser_advance(parser);
+        return parse_print_statement(parser);
+    }
+
+    if (parser_match(parser, TOKEN_DEBUG))
+    {
+        parser_advance(parser);
+        return parse_debug_statement(parser);
+    }
+
+    if (parser_match(parser, TOKEN_LEFT_BRACE))
+    {
+        parser_advance(parser);
+        return parse_block_statement(parser);
+    }
+
+    if (parser_match(parser, TOKEN_IF))
+    {
+        parser_advance(parser);
+        return parse_if_statement(parser);
+    }
+
+    if (parser_match(parser, TOKEN_WHILE))
+    {
+        parser_advance(parser);
+        return parse_while_statement(parser);
+    }
+
+    if (parser_match(parser, TOKEN_FOR))
+    {
+        parser_advance(parser);
+        return parse_for_statement(parser);
+    }
+
+    Expr *expr = parse_expression(parser);
+    if (expr == NULL)
+        return NULL;
+
+    if (parser_consume(parser, TOKEN_SEMICOLON, "Expect ';' after expression.") != PARSER_SUCCESS)
+    {
+        free(expr);
+        return NULL;
+    }
+
+    return NULL;
+}
+
+static Stmt **parse_program(Parser *parser, int *count)
+{
+
+    int capacity = 8;
+    int stmt_count = 0;
+    Stmt **statements = malloc(sizeof(Stmt *) * capacity);
+    if (statements == NULL)
+        return NULL;
+    while (!parser_is_at_end(parser))
+    {
+        Stmt *stmt = parse_declaration(parser);
+        if (stmt != NULL)
+        {
+            if (stmt_count >= capacity)
+            {
+                capacity *= 2;
+                statements = realloc(statements, sizeof(Stmt *) * ((capacity * 0.5) + 1));
+                if (!statements)
+                    return NULL;
+            }
+            statements[stmt_count++] = stmt;
+        }
+        else
+        {
+            // Error recovery - skip to next statement
+            // This could be more sophisticated with synchronization
+            while (!parser_is_at_end(parser))
+            {
+                if (parser_match(parser, TOKEN_SEMICOLON))
+                    break;
+                parser_advance(parser);
+            }
+        }
+    }
+
+    *count = stmt_count;
+    return statements;
+}
 
 static char *parse_lexeme(Token token)
 {
