@@ -4,6 +4,7 @@
 #include "string.h"
 #include "trie.h"
 #include "expr.h"
+#include "stmt.h"
 
 // #define DEBUG_EXPR_TREE_S_FORMAT
 #define DEBUG_EXPR_TREE
