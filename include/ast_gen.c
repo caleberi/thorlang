@@ -1072,18 +1072,21 @@ void generate_ast(const char *path)
     }
 
     Parser *parser = parser_create(&tks);
-    Expr *expr = parse_expression(parser);
-    if (expr != NULL)
+    int stmt_count = 0;
+    Stmt **stmts = parse_program(parser, &stmt_count);
+    if (stmts != NULL)
     {
-#ifdef DEBUG_EXPR_TREE_S_FORMAT
-        print_expr_as_s_expr(expr);
-#endif
+        // #ifdef DEBUG_EXPR_TREE_S_FORMAT
+        //         print_expr_as_s_expr(expr);
+        // #endif
 
-#ifdef DEBUG_EXPR_TREE
-        print_expr(expr, 1);
-#endif
+        // #ifdef DEBUG_EXPR_TREE
+        //         print_expr(expr, 1);
+        // #endif
+
+        print_stmt_list(stmts, stmt_count, 1);
         printf("\n");
-        free(expr);
+        free(stmts);
     }
     free(buffer);
     parser_destroy(parser);
