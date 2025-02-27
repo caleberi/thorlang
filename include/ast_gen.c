@@ -1379,6 +1379,16 @@ void test_simple_expression_tokens()
     printf("Basic simple test completed\n\n");
 }
 
+void test_simple_statements_tokens()
+{
+    printf("Testing simple expression tokens...\n");
+    const char *test_input = "var x=90;\n";
+
+    write_test_file(test_input, "test_simple_statement.txt");
+    generate_ast("test_simple_statement.txt");
+    printf("Basic simple statement test completed\n\n");
+}
+
 void test_basic_tokens()
 {
     printf("Testing basic tokens...\n");
@@ -1459,7 +1469,8 @@ void test_complex_code()
 int main()
 {
     printf("Starting scanner tests...\n\n");
-    test_simple_expression_tokens();
+    test_simple_statements_tokens();
+    // test_simple_expression_tokens();
     // test_basic_tokens();
     // test_numbers_and_strings();
     // test_operators();
