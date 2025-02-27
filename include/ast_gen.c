@@ -1245,6 +1245,117 @@ static void print_indent(int indent)
     }
 }
 
+void print_stmt_list(Stmt **statements, int count, int indent)
+{
+    for (int i = 0; i < count; i++)
+    {
+        print_stmt(statements[i], indent);
+    }
+}
+
+void print_stmt(Stmt *stmt, int indent)
+{
+    if (!stmt)
+    {
+        print_indent(indent);
+        printf("NULL Statement\n");
+        return;
+    }
+
+    switch (stmt->tag)
+    {
+    case STMT_PRINT:
+        print_indent(indent);
+        printf("Print Statement:\n");
+        print_expr(stmt->as.printStmt.expression, indent + 2);
+        break;
+
+    case STMT_DEBUG:
+        print_indent(indent);
+        printf("Debug Statement:\n");
+        print_expr(stmt->as.debugStatement.expression, indent + 2);
+        break;
+
+    case STMT_BLOCK:
+        print_indent(indent);
+        printf("Block Statement (%d statements):\n", stmt->as.blockStmt.count);
+        print_stmt_list(stmt->as.blockStmt.statements, stmt->as.blockStmt.count, indent + 2);
+        break;
+
+    case STMT_VAR_DECL:
+        print_indent(indent);
+        printf("Variable Declaration: %.*s\n",
+               (int)stmt->as.varDeclStmt.name.length,
+               parse_lexeme(stmt->as.varDeclStmt.name));
+        if (stmt->as.varDeclStmt.initializer)
+        {
+            print_indent(indent + 2);
+            printf("Initializer:\n");
+            print_expr(stmt->as.varDeclStmt.initializer, indent + 4);
+        }
+        break;
+
+    case STMT_IF:
+        print_indent(indent);
+        printf("If Statement:\n");
+        print_indent(indent + 2);
+        printf("Condition:\n");
+        print_expr(stmt->as.ifStmt.condition, indent + 4);
+        print_indent(indent + 2);
+        printf("Then Branch:\n");
+        print_stmt(stmt->as.ifStmt.thenBranch, indent + 4);
+        if (stmt->as.ifStmt.elseBranch)
+        {
+            print_indent(indent + 2);
+            printf("Else Branch:\n");
+            print_stmt(stmt->as.ifStmt.elseBranch, indent + 4);
+        }
+        break;
+
+    case STMT_WHILE:
+        print_indent(indent);
+        printf("While Statement:\n");
+        print_indent(indent + 2);
+        printf("Condition:\n");
+        print_expr(stmt->as.whileStmt.condition, indent + 4);
+        print_indent(indent + 2);
+        printf("Body:\n");
+        print_stmt(stmt->as.whileStmt.body, indent + 4);
+        break;
+
+    case STMT_FOR:
+        print_indent(indent);
+        printf("For Statement:\n");
+        if (stmt->as.forStmt.initializer)
+        {
+            print_indent(indent + 2);
+            printf("Initializer:\n");
+            print_stmt(stmt->as.forStmt.initializer, indent + 4);
+        }
+        if (stmt->as.forStmt.condition)
+        {
+            print_indent(indent + 2);
+            printf("Condition:\n");
+            print_expr(stmt->as.forStmt.condition, indent + 4);
+        }
+        if (stmt->as.forStmt.increment)
+        {
+            print_indent(indent + 2);
+            printf("Increment:\n");
+            print_expr(stmt->as.forStmt.increment, indent + 4);
+        }
+        print_indent(indent + 2);
+        printf("Body:\n");
+        print_stmt(stmt->as.forStmt.body, indent + 4);
+        break;
+
+    default:
+        print_indent(indent);
+        printf("Unknown statement type: %d\n", stmt->tag);
+        break;
+    }
+}
+
 void write_test_file(const char *content, const char *filename)
 {
     FILE *fp = fopen(filename, "w");
