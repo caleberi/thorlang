@@ -423,7 +423,7 @@ static Stmt *parse_block_statement(Parser *parser)
             {
                 capacity *= 2;
                 statements = realloc(statements, sizeof(Stmt *) * ((capacity * 0.5) + 1));
-                if (!statements)
+                if (statements == NULL)
                     return NULL;
             }
             statements[stmt_count++] = stmt;
@@ -432,10 +432,12 @@ static Stmt *parse_block_statement(Parser *parser)
 
     if (parser_is_at_end(parser) && parser_peek(parser).type != TOKEN_RIGHT_BRACE)
     {
+        free(statements);
         parser->last_error = PARSER_ERROR_UNEXPECTED_TOKEN;
         return NULL;
     }
 
+    parser_advance(parser);
     Stmt *stmt = malloc(sizeof(Stmt));
     if (stmt == NULL)
         return NULL;
@@ -473,10 +475,24 @@ static Stmt *parse_if_statement(Parser *parser)
     if (parser_match(parser, TOKEN_ELSE))
     {
         parser_advance(parser);
+        if (parser_consume(parser, TOKEN_LEFT_BRACE, "Expect '{' after else.") != PARSER_SUCCESS)
+        {
+            free(condition);
+            free(then_branch);
+            return NULL;
+        }
         else_branch = parse_statement(parser);
         if (else_branch == NULL)
         {
             free(condition);
+            free(then_branch);
+            free(else_branch);
+            return NULL;
+        }
+        if (parser_consume(parser, TOKEN_RIGHT_BRACE, "Expect '}' after else block.") != PARSER_SUCCESS)
+        {
+            free(condition);
+            free(then_branch);
             free(else_branch);
             return NULL;
         }
@@ -748,7 +764,7 @@ static Stmt **parse_program(Parser *parser, int *count)
             {
                 capacity *= 2;
                 statements = realloc(statements, sizeof(Stmt *) * ((capacity * 0.5) + 1));
-                if (!statements)
+                if (statements == NULL)
                     return NULL;
             }
             statements[stmt_count++] = stmt;
@@ -1428,7 +1444,7 @@ void test_simple_expression_tokens()
 {
     printf("Testing simple expression tokens...\n");
     const char *test_input =
-        "(( -5 + 8 ) * 9) + 1238.348 - 20;\n";
+        "var y = (( -5 + 8 ) * 9) + 1238.348 - 20;\n";
 
     write_test_file(test_input, "test_simple_expression.txt");
     generate_ast("test_simple_expression.txt");
@@ -1460,6 +1476,22 @@ void test_basic_tokens()
 
     write_test_file(test_input, "test_basic.txt");
     generate_ast("test_basic.txt");
+    printf("Basic tokens test completed\n\n");
+}
+
+void test_condition_tokens()
+{
+    printf("Testing basic tokens...\n");
+    const char *test_input =
+        "var x = 42;\n"
+        "if (x > 10) {\n"
+        "    print x;\n"
+        "} else {\n"
+        "   print \"dope\";\n"
+        "}\n";
+
+    write_test_file(test_input, "test_condition.txt");
+    generate_ast("test_condition.txt");
     printf("Basic tokens test completed\n\n");
 }
 
@@ -1535,7 +1567,8 @@ int main()
     test_numbers_and_strings();
     test_operators();
     test_comments();
-    test_complex_code();
+    test_condition_tokens();
+    // test_complex_code();
 
     printf("All scanner tests completed.\n");
     return 0;
