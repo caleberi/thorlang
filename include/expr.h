@@ -18,7 +18,8 @@ typedef enum ExprType
     EXPR_FALSE,
     EXPR_NIL,
     EXPR_BINARY,
-    EXPR_GROUPING
+    EXPR_GROUPING,
+    EXPR_VARIABLE,
 } ExprType;
 
 typedef enum NumberType
@@ -43,7 +44,8 @@ typedef enum NumberType
             float fvalue; \
             double dvalue; } v;) \
     V(String,                                \
-      char *value;)
+      char *value;)                          \
+    V(Var, char *name;)
 
 #define EXPR_STRUCT_FORWARD_DECL(name, ...) \
     typedef struct name##Expr name##Expr;
@@ -68,6 +70,7 @@ typedef struct Expr
         GroupingExpr group;
         NumberExpr number;
         StringExpr string;
+        VarExpr variable;
     } as;
 } Expr;
 

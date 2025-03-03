@@ -17,6 +17,7 @@ typedef enum StmtType
   STMT_BLOCK,
   STMT_VAR_DECL,
   STMT_DEBUG,
+  STMT_EXPRESSION
 } StmtType;
 
 typedef struct Stmt Stmt;
@@ -59,7 +60,8 @@ typedef struct Stmt Stmt;
     int count;)              \
   V(VarDecl,                 \
     Token name;              \
-    Expr * initializer;)
+    Expr * initializer;)     \
+  V(Expr, Expr *expr;)
 
 #define STMT_STRUCT_FORWARD_DECL(name, ...) \
   typedef struct name##Stmt name##Stmt;
@@ -89,6 +91,7 @@ struct Stmt
     BlockStmt blockStmt;
     VarDeclStmt varDeclStmt;
     DebugStmt debugStatement;
+    ExprStmt exprStmt;
   } as;
 };
 
