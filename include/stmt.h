@@ -17,7 +17,7 @@ typedef enum StmtType
   STMT_BLOCK,
   STMT_VAR_DECL,
   STMT_DEBUG,
-  STMT_EXPRESSION
+  STMT_EXPRESSION,
 } StmtType;
 
 typedef struct Stmt Stmt;
@@ -63,8 +63,7 @@ typedef struct Stmt Stmt;
     Expr * initializer;)     \
   V(Expr, Expr *expr;)
 
-#define STMT_STRUCT_FORWARD_DECL(name, ...) \
-  typedef struct name##Stmt name##Stmt;
+#define STMT_STRUCT_FORWARD_DECL(name, ...) typedef struct name##Stmt name##Stmt;
 
 DEFINE_STMT_TYPES(STMT_STRUCT_FORWARD_DECL)
 
