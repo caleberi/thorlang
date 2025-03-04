@@ -88,6 +88,7 @@ typedef struct
     ParserResult last_error;
 } Parser;
 
+static Expr *parse_assignment(Parser *);
 static Expr *parse_equality(Parser *parser);
 static Expr *parse_comparison(Parser *parser);
 static Expr *parse_term(Parser *parser);
@@ -100,6 +101,8 @@ Token parser_peek_prev(const Parser *parser);
 void parser_advance(Parser *parser);
 
 static Stmt *parse_declaration(Parser *parser);
+static Expr *parse_logic_or(Parser *parser);
+static Expr *parse_logic_and(Parser *parser);
 static Stmt *parse_statement(Parser *parser);
 static Stmt **parse_program(Parser *parser, int *count);
 static Stmt *parse_print_statement(Parser *parser);
