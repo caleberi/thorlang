@@ -337,7 +337,7 @@ static void scan_tokens(Scanner *scanner, Tokens *tokens)
             CASE_TOKEN(';', TOKEN_SEMICOLON);
             CASE_TOKEN('?', TOKEN_QUESTION);
             CASE_TOKEN(':', TOKEN_COLON);
-            CASE_TOKEN('!', match(scanner, '=') ? TOKEN_BANG_EQUAL : TOKEN_AND);
+            CASE_TOKEN('!', match(scanner, '=') ? TOKEN_BANG_EQUAL : TOKEN_BANG);
             CASE_TOKEN('=', match(scanner, '=') ? TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
             CASE_TOKEN('<', match(scanner, '=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
             CASE_TOKEN('>', match(scanner, '=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
