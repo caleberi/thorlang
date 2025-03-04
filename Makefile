@@ -21,15 +21,23 @@ OBJECTS = $(SOURCES:.c=.o)
 # Output executable name
 TARGET = thor
 
+# Analyser executable name
+ANALYSER = thor-analyser
+
 # Phony targets
 .PHONY: all clean
 
 # Default target
 all: $(TARGET)
 
+analyser: $(ANALYSER)
+
 # Linking rule
 $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $(TARGET)
+
+$(ANALYSER):  ./include/trie.c ./include/memory.c ./include/analyser.c
+	$(CC) $(CFLAGS) -Iinclude $(SRC_DIR)/analyser.c $(SRC_DIR)/trie.c $(SRC_DIR)/memory.c -o $(ANALYSER)
 
 # Compilation rule
 %.o: %.c
@@ -37,4 +45,4 @@ $(TARGET): $(OBJECTS)
 
 # Clean rule
 clean:
-	rm -f $(OBJECTS) $(TARGET)
+	rm -f $(OBJECTS) $(TARGET) $(ANALYSER)
