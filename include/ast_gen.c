@@ -1319,6 +1319,14 @@ void print_expr(Expr *expr, int indent)
             break;
         }
         break;
+    case EXPR_ASSIGN:
+        printf("Assignment Statement:\n");
+        print_indent(indent + 2);
+        printf("Name: %s\n", expr->as.assign.name);
+        print_indent(indent + 2);
+        printf("Value: \n");
+        print_expr(expr->as.assign.value, indent + 4);
+        break;
 
     case EXPR_STRING:
         printf("String: \"%s\"\n", expr->as.string.value);
@@ -1391,6 +1399,11 @@ void print_expr_as_s_expr(Expr *expr)
         printf("\"%s\"", expr->as.string.value);
         break;
 
+    case EXPR_ASSIGN:
+        printf("(assign ");
+        printf("name = %s", expr->as.assign.name);
+        print_expr_as_s_expr(expr->as.assign.value);
+        break;
     case EXPR_TRUE:
         printf("true");
         break;
@@ -1495,6 +1508,9 @@ void print_stmt(Stmt *stmt, int indent)
         print_stmt(stmt->as.whileStmt.body, indent + 4);
         break;
 
+    case STMT_EXPRESSION:
+        print_expr(stmt->as.exprStmt.expr, indent);
+        break;
     case STMT_FOR:
         print_indent(indent);
         printf("For Statement:\n");
