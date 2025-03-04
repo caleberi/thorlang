@@ -1657,6 +1657,169 @@ void test_comments()
     printf("Comments test completed\n\n");
 }
 
+void test_loops()
+{
+    printf("Testing loop constructs...\n");
+    const char *test_input =
+        "var i = 0;\n"
+        "while (i < 10) {\n"
+        "    print i;\n"
+        "    i = i + 1;\n"
+        "}\n"
+        "\n"
+        "for (var j = 0; j < 5; j = j + 1) {\n"
+        "    print j * j;\n"
+        "}\n";
+
+    write_test_file(test_input, "test_loops.txt");
+    generate_ast("test_loops.txt");
+    printf("Loop constructs test completed\n\n");
+}
+
+void test_nested_blocks()
+{
+    printf("Testing nested block structures...\n");
+    const char *test_input =
+        "var x = 10;\n"
+        "if (x > 5) {\n"
+        "    if (x < 15) {\n"
+        "        print \"Between 5 and 15\";\n"
+        "        {\n"
+        "            var y = x * 2;\n"
+        "            print y;\n"
+        "        }\n"
+        "    }\n"
+        "}\n";
+
+    write_test_file(test_input, "test_nested_blocks.txt");
+    generate_ast("test_nested_blocks.txt");
+    printf("Nested blocks test completed\n\n");
+}
+
+void test_function_definitions()
+{
+    printf("Testing function definitions...\n");
+    const char *test_input =
+        "func add(a, b) {\n"
+        "    return a + b;\n"
+        "}\n"
+        "\n"
+        "func greet(name) {\n"
+        "    print \"Hello, \" + name + \"!\";\n"
+        "}\n"
+        "\n"
+        "var result = add(5, 10);\n"
+        "greet(\"User\");\n";
+
+    write_test_file(test_input, "test_functions.txt");
+    generate_ast("test_functions.txt");
+    printf("Function definitions test completed\n\n");
+}
+
+void test_arrays()
+{
+    printf("Testing array operations...\n");
+    const char *test_input =
+        "var numbers = [1, 2, 3, 4, 5];\n"
+        "print numbers[2];\n"
+        "numbers[0] = 99;\n"
+        "var matrix = [[1, 2], [3, 4]];\n"
+        "print matrix[1][0];\n";
+
+    write_test_file(test_input, "test_arrays.txt");
+    generate_ast("test_arrays.txt");
+    printf("Array operations test completed\n\n");
+}
+
+void test_logical_operators()
+{
+    printf("Testing logical operators...\n");
+    const char *test_input =
+        "var a = true;\n"
+        "var b = false;\n"
+        "print a and b;\n"
+        "print a or b;\n"
+        "print not a;\n"
+        "if (a and not b) {\n"
+        "    print \"Logic works!\";\n"
+        "}\n";
+
+    write_test_file(test_input, "test_logical.txt");
+    generate_ast("test_logical.txt");
+    printf("Logical operators test completed\n\n");
+}
+
+void test_scoping()
+{
+    printf("Testing variable scoping...\n");
+    const char *test_input =
+        "var global = 10;\n"
+        "{\n"
+        "    var local = 20;\n"
+        "    print global + local;\n"
+        "}\n"
+        "func test() {\n"
+        "    var func_local = 30;\n"
+        "    print global + func_local;\n"
+        "}\n"
+        "test();\n";
+
+    write_test_file(test_input, "test_scoping.txt");
+    generate_ast("test_scoping.txt");
+    printf("Variable scoping test completed\n\n");
+}
+
+void test_error_cases()
+{
+    printf("Testing error cases...\n");
+    const char *test_input =
+        "var x = 5\n"                    // Missing semicolon
+        "print \"Unterminated string;\n" // Unterminated string
+        "var 123invalid = 10;\n"         // Invalid variable name
+        "var y = @invalid_char;\n";      // Invalid character
+
+    write_test_file(test_input, "test_errors.txt");
+    generate_ast("test_errors.txt");
+    printf("Error cases test completed\n\n");
+}
+
+void test_expressions_precedence()
+{
+    printf("Testing expression precedence...\n");
+    const char *test_input =
+        "var a = 2 + 3 * 4;\n"     // Should be 14, not 20
+        "var b = (2 + 3) * 4;\n"   // Should be 20
+        "var c = 15 - 3 + 2;\n"    // Should be 14
+        "var d = 15 - (3 + 2);\n"  // Should be 10
+        "var e = 10 / 2 * 3;\n"    // Should be 15
+        "var f = 10 / (2 * 3);\n"; // Should be approx 1.67
+
+    write_test_file(test_input, "test_precedence.txt");
+    generate_ast("test_precedence.txt");
+    printf("Expression precedence test completed\n\n");
+}
+
+void test_switch_case()
+{
+    printf("Testing switch case statements...\n");
+    const char *test_input =
+        "var option = 2;\n"
+        "switch (option) {\n"
+        "    case 1:\n"
+        "        print \"Option One\";\n"
+        "        break;\n"
+        "    case 2:\n"
+        "        print \"Option Two\";\n"
+        "        break;\n"
+        "    default:\n"
+        "        print \"Unknown Option\";\n"
+        "}\n";
+
+    write_test_file(test_input, "test_switch.txt");
+    generate_ast("test_switch.txt");
+    printf("Switch case test completed\n\n");
+}
+
 void test_complex_code()
 {
     printf("Testing complex code...\n");
