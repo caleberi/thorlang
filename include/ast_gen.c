@@ -547,7 +547,6 @@ static Stmt *parse_for_statement(Parser *parser)
 {
     if (parser_consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.") != PARSER_SUCCESS)
         return NULL;
-
     Stmt *initializer = NULL;
     if (parser_match(parser, TOKEN_VAR))
     {
@@ -707,17 +706,7 @@ static Stmt *parse_statement(Parser *parser)
         return parse_for_statement(parser);
     }
 
-    Stmt *expr = parse_expression_statement(parser);
-    if (expr == NULL)
-        return NULL;
-
-    // if (parser_consume(parser, TOKEN_SEMICOLON, "Expect ';' after expression.") != PARSER_SUCCESS)
-    // {
-    //     free(expr);
-    //     return NULL;
-    // }
-
-    return expr;
+    return parse_expression_statement(parser);
 }
 
 static Stmt *parse_expression_statement(Parser *parser)
