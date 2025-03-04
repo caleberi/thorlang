@@ -847,6 +847,7 @@ bool parser_match(Parser *parser, TokenType type)
 
 ParserResult parser_consume(Parser *parser, TokenType expected_type, const char *error_message)
 {
+
     if (parser_match(parser, expected_type))
     {
         parser_advance(parser);
@@ -883,7 +884,120 @@ static Expr *create_unary_expr(TokenType op, Expr *right)
     return expr;
 }
 
-Expr *parse_expression(Parser *parser) { return parse_equality(parser); }
+Expr *parse_expression(Parser *parser)
+{
+    return parse_assignment(parser);
+}
+
+static Expr *parse_logic_or(Parser *parser)
+{
+    Expr *expr = parse_logic_and(parser);
+    if (expr == NULL)
+        return NULL;
+
+    while (parser_match(parser, TOKEN_OR))
+    {
+        parser_advance(parser);
+        Expr *right = parse_logic_and(parser);
+        if (right == NULL)
+        {
+            free(expr);
+            return NULL;
+        }
+
+        Expr *binary = malloc(sizeof(Expr));
+        if (binary == NULL)
+        {
+            free(expr);
+            free(right);
+            return NULL;
+        }
+
+        binary->tag = EXPR_BINARY;
+        binary->as.binary.left = expr;
+        binary->as.binary.right = right;
+        binary->as.binary.op = TOKEN_OR;
+        expr = binary;
+    }
+
+    return expr;
+}
+
+static Expr *parse_logic_and(Parser *parser)
+{
+    Expr *expr = parse_equality(parser);
+    if (expr == NULL)
+        return NULL;
+
+    while (parser_match(parser, TOKEN_AND))
+    {
+        parser_advance(parser);
+
+        Expr *right = parse_equality(parser);
+        if (right == NULL)
+        {
+            free(expr);
+            return NULL;
+        }
+
+        Expr *binary = malloc(sizeof(Expr));
+        if (binary == NULL)
+        {
+            free(expr);
+            free(right);
+            return NULL;
+        }
+
+        binary->tag = EXPR_BINARY;
+        binary->as.binary.left = expr;
+        binary->as.binary.right = right;
+        binary->as.binary.op = TOKEN_AND;
+        expr = binary;
+    }
+
+    return expr;
+}
+
+static Expr *parse_assignment(Parser *parser)
+{
+    Expr *expr = parse_logic_or(parser);
+
+    if (expr == NULL)
+        return NULL;
+
+    if (parser_match(parser, TOKEN_EQUAL))
+    {
+        parser_advance(parser);
+        Expr *value = parse_assignment(parser);
+        if (value == NULL)
+        {
+            free(expr);
+            return NULL;
+        }
+
+        if (expr->tag == EXPR_VARIABLE)
+        {
+            Expr *assign = malloc(sizeof(Expr));
+            if (assign == NULL)
+            {
+                free(expr);
+                free(value);
+                return NULL;
+            }
+
+            assign->tag = EXPR_ASSIGN;
+            assign->as.assign.name = expr->as.variable.name;
+            assign->as.assign.value = value;
+            free(expr);
+            return assign;
+        }
+
+        free(expr);
+        free(value);
+        return NULL;
+    }
+    return expr;
+}
 
 // Equailty -> Comparison (( "!=" | "==" ) Comparison)*
 static Expr *parse_equality(Parser *parser)
