@@ -549,45 +549,39 @@ static Stmt *parse_for_statement(Parser *parser)
         return NULL;
 
     Stmt *initializer = NULL;
-    if (parser_match(parser, TOKEN_SEMICOLON))
-        parser_advance(parser);
-    else if (parser_match(parser, TOKEN_VAR))
+    if (parser_match(parser, TOKEN_VAR))
     {
         parser_advance(parser);
         initializer = parse_var_declaration(parser);
         if (initializer == NULL)
             return NULL;
     }
-    else
+
+    if (parser_match(parser, TOKEN_IDENTIFIER))
     {
-        Expr *init_expr = parse_expression(parser);
-        if (init_expr == NULL)
+        Expr *initializer = parse_expression(parser);
+        if (initializer == NULL)
             return NULL;
 
         if (parser_consume(parser, TOKEN_SEMICOLON, "Expect ';' after for-loop initializer.") != PARSER_SUCCESS)
-        {
-            free(init_expr);
-            return NULL;
-        }
-    }
-
-    Expr *condition = NULL;
-    if (!parser_match(parser, TOKEN_SEMICOLON))
-    {
-        parser_advance(parser);
-        condition = parse_expression(parser);
-        if (condition == NULL)
         {
             free(initializer);
             return NULL;
         }
     }
 
-    if (parser_consume(parser, TOKEN_SEMICOLON, "Expect ';' after for-loop condition.") != PARSER_SUCCESS)
+    if (parser_match(parser, TOKEN_SEMICOLON))
+        parser_advance(parser);
+
+    Expr *condition = NULL;
+    if (!parser_match(parser, TOKEN_SEMICOLON))
     {
-        free(initializer);
-        free(condition);
-        return NULL;
+        condition = parse_expression(parser);
+        if (condition == NULL)
+        {
+            free(initializer);
+            return NULL;
+        }
     }
 
     Expr *increment = NULL;
