@@ -1847,7 +1847,16 @@ int main()
     test_operators();
     test_comments();
     test_condition_tokens();
+    test_loops();
+    test_nested_blocks();
+    // test_function_definitions();
+    // test_arrays();
+    // test_logical_operators();
+    // test_scoping();
+    test_expressions_precedence();
+    // test_switch_case();
     // test_complex_code();
+    // test_error_cases();
 
     printf("All scanner tests completed.\n");
     return 0;
