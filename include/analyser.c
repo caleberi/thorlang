@@ -88,6 +88,7 @@ typedef struct
     ParserResult last_error;
 } Parser;
 
+static Expr *parse_assignment(Parser *);
 static Expr *parse_equality(Parser *parser);
 static Expr *parse_comparison(Parser *parser);
 static Expr *parse_term(Parser *parser);
@@ -100,6 +101,8 @@ Token parser_peek_prev(const Parser *parser);
 void parser_advance(Parser *parser);
 
 static Stmt *parse_declaration(Parser *parser);
+static Expr *parse_logic_or(Parser *parser);
+static Expr *parse_logic_and(Parser *parser);
 static Stmt *parse_statement(Parser *parser);
 static Stmt **parse_program(Parser *parser, int *count);
 static Stmt *parse_print_statement(Parser *parser);
@@ -334,7 +337,7 @@ static void scan_tokens(Scanner *scanner, Tokens *tokens)
             CASE_TOKEN(';', TOKEN_SEMICOLON);
             CASE_TOKEN('?', TOKEN_QUESTION);
             CASE_TOKEN(':', TOKEN_COLON);
-            CASE_TOKEN('!', match(scanner, '=') ? TOKEN_BANG_EQUAL : TOKEN_AND);
+            CASE_TOKEN('!', match(scanner, '=') ? TOKEN_BANG_EQUAL : TOKEN_BANG);
             CASE_TOKEN('=', match(scanner, '=') ? TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
             CASE_TOKEN('<', match(scanner, '=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
             CASE_TOKEN('>', match(scanner, '=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
@@ -544,47 +547,40 @@ static Stmt *parse_for_statement(Parser *parser)
 {
     if (parser_consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.") != PARSER_SUCCESS)
         return NULL;
-
     Stmt *initializer = NULL;
-    if (parser_match(parser, TOKEN_SEMICOLON))
-        parser_advance(parser);
-    else if (parser_match(parser, TOKEN_VAR))
+    if (parser_match(parser, TOKEN_VAR))
     {
         parser_advance(parser);
         initializer = parse_var_declaration(parser);
         if (initializer == NULL)
             return NULL;
     }
-    else
+
+    if (parser_match(parser, TOKEN_IDENTIFIER))
     {
-        Expr *init_expr = parse_expression(parser);
-        if (init_expr == NULL)
+        Expr *initializer = parse_expression(parser);
+        if (initializer == NULL)
             return NULL;
 
         if (parser_consume(parser, TOKEN_SEMICOLON, "Expect ';' after for-loop initializer.") != PARSER_SUCCESS)
-        {
-            free(init_expr);
-            return NULL;
-        }
-    }
-
-    Expr *condition = NULL;
-    if (!parser_match(parser, TOKEN_SEMICOLON))
-    {
-        parser_advance(parser);
-        condition = parse_expression(parser);
-        if (condition == NULL)
         {
             free(initializer);
             return NULL;
         }
     }
 
-    if (parser_consume(parser, TOKEN_SEMICOLON, "Expect ';' after for-loop condition.") != PARSER_SUCCESS)
+    if (parser_match(parser, TOKEN_SEMICOLON))
+        parser_advance(parser);
+
+    Expr *condition = NULL;
+    if (!parser_match(parser, TOKEN_SEMICOLON))
     {
-        free(initializer);
-        free(condition);
-        return NULL;
+        condition = parse_expression(parser);
+        if (condition == NULL)
+        {
+            free(initializer);
+            return NULL;
+        }
     }
 
     Expr *increment = NULL;
@@ -710,17 +706,7 @@ static Stmt *parse_statement(Parser *parser)
         return parse_for_statement(parser);
     }
 
-    Stmt *expr = parse_expression_statement(parser);
-    if (expr == NULL)
-        return NULL;
-
-    // if (parser_consume(parser, TOKEN_SEMICOLON, "Expect ';' after expression.") != PARSER_SUCCESS)
-    // {
-    //     free(expr);
-    //     return NULL;
-    // }
-
-    return expr;
+    return parse_expression_statement(parser);
 }
 
 static Stmt *parse_expression_statement(Parser *parser)
@@ -861,6 +847,7 @@ bool parser_match(Parser *parser, TokenType type)
 
 ParserResult parser_consume(Parser *parser, TokenType expected_type, const char *error_message)
 {
+
     if (parser_match(parser, expected_type))
     {
         parser_advance(parser);
@@ -897,7 +884,120 @@ static Expr *create_unary_expr(TokenType op, Expr *right)
     return expr;
 }
 
-Expr *parse_expression(Parser *parser) { return parse_equality(parser); }
+Expr *parse_expression(Parser *parser)
+{
+    return parse_assignment(parser);
+}
+
+static Expr *parse_logic_or(Parser *parser)
+{
+    Expr *expr = parse_logic_and(parser);
+    if (expr == NULL)
+        return NULL;
+
+    while (parser_match(parser, TOKEN_OR))
+    {
+        parser_advance(parser);
+        Expr *right = parse_logic_and(parser);
+        if (right == NULL)
+        {
+            free(expr);
+            return NULL;
+        }
+
+        Expr *binary = malloc(sizeof(Expr));
+        if (binary == NULL)
+        {
+            free(expr);
+            free(right);
+            return NULL;
+        }
+
+        binary->tag = EXPR_BINARY;
+        binary->as.binary.left = expr;
+        binary->as.binary.right = right;
+        binary->as.binary.op = TOKEN_OR;
+        expr = binary;
+    }
+
+    return expr;
+}
+
+static Expr *parse_logic_and(Parser *parser)
+{
+    Expr *expr = parse_equality(parser);
+    if (expr == NULL)
+        return NULL;
+
+    while (parser_match(parser, TOKEN_AND))
+    {
+        parser_advance(parser);
+
+        Expr *right = parse_equality(parser);
+        if (right == NULL)
+        {
+            free(expr);
+            return NULL;
+        }
+
+        Expr *binary = malloc(sizeof(Expr));
+        if (binary == NULL)
+        {
+            free(expr);
+            free(right);
+            return NULL;
+        }
+
+        binary->tag = EXPR_BINARY;
+        binary->as.binary.left = expr;
+        binary->as.binary.right = right;
+        binary->as.binary.op = TOKEN_AND;
+        expr = binary;
+    }
+
+    return expr;
+}
+
+static Expr *parse_assignment(Parser *parser)
+{
+    Expr *expr = parse_logic_or(parser);
+
+    if (expr == NULL)
+        return NULL;
+
+    if (parser_match(parser, TOKEN_EQUAL))
+    {
+        parser_advance(parser);
+        Expr *value = parse_assignment(parser);
+        if (value == NULL)
+        {
+            free(expr);
+            return NULL;
+        }
+
+        if (expr->tag == EXPR_VARIABLE)
+        {
+            Expr *assign = malloc(sizeof(Expr));
+            if (assign == NULL)
+            {
+                free(expr);
+                free(value);
+                return NULL;
+            }
+
+            assign->tag = EXPR_ASSIGN;
+            assign->as.assign.name = expr->as.variable.name;
+            assign->as.assign.value = value;
+            free(expr);
+            return assign;
+        }
+
+        free(expr);
+        free(value);
+        return NULL;
+    }
+    return expr;
+}
 
 // Equailty -> Comparison (( "!=" | "==" ) Comparison)*
 static Expr *parse_equality(Parser *parser)
@@ -1219,6 +1319,14 @@ void print_expr(Expr *expr, int indent)
             break;
         }
         break;
+    case EXPR_ASSIGN:
+        printf("Assignment Statement:\n");
+        print_indent(indent + 2);
+        printf("Name: %s\n", expr->as.assign.name);
+        print_indent(indent + 2);
+        printf("Value: \n");
+        print_expr(expr->as.assign.value, indent + 4);
+        break;
 
     case EXPR_STRING:
         printf("String: \"%s\"\n", expr->as.string.value);
@@ -1291,6 +1399,11 @@ void print_expr_as_s_expr(Expr *expr)
         printf("\"%s\"", expr->as.string.value);
         break;
 
+    case EXPR_ASSIGN:
+        printf("(assign ");
+        printf("name = %s", expr->as.assign.name);
+        print_expr_as_s_expr(expr->as.assign.value);
+        break;
     case EXPR_TRUE:
         printf("true");
         break;
@@ -1395,6 +1508,9 @@ void print_stmt(Stmt *stmt, int indent)
         print_stmt(stmt->as.whileStmt.body, indent + 4);
         break;
 
+    case STMT_EXPRESSION:
+        print_expr(stmt->as.exprStmt.expr, indent);
+        break;
     case STMT_FOR:
         print_indent(indent);
         printf("For Statement:\n");
@@ -1541,6 +1657,169 @@ void test_comments()
     printf("Comments test completed\n\n");
 }
 
+void test_loops()
+{
+    printf("Testing loop constructs...\n");
+    const char *test_input =
+        "var i = 0;\n"
+        "while (i < 10) {\n"
+        "    print i;\n"
+        "    i = i + 1;\n"
+        "}\n"
+        "\n"
+        "for (var j = 0; j < 5; j = j + 1) {\n"
+        "    print j * j;\n"
+        "}\n";
+
+    write_test_file(test_input, "test_loops.txt");
+    generate_ast("test_loops.txt");
+    printf("Loop constructs test completed\n\n");
+}
+
+void test_nested_blocks()
+{
+    printf("Testing nested block structures...\n");
+    const char *test_input =
+        "var x = 10;\n"
+        "if (x > 5) {\n"
+        "    if (x < 15) {\n"
+        "        print \"Between 5 and 15\";\n"
+        "        {\n"
+        "            var y = x * 2;\n"
+        "            print y;\n"
+        "        }\n"
+        "    }\n"
+        "}\n";
+
+    write_test_file(test_input, "test_nested_blocks.txt");
+    generate_ast("test_nested_blocks.txt");
+    printf("Nested blocks test completed\n\n");
+}
+
+void test_function_definitions()
+{
+    printf("Testing function definitions...\n");
+    const char *test_input =
+        "func add(a, b) {\n"
+        "    return a + b;\n"
+        "}\n"
+        "\n"
+        "func greet(name) {\n"
+        "    print \"Hello, \" + name + \"!\";\n"
+        "}\n"
+        "\n"
+        "var result = add(5, 10);\n"
+        "greet(\"User\");\n";
+
+    write_test_file(test_input, "test_functions.txt");
+    generate_ast("test_functions.txt");
+    printf("Function definitions test completed\n\n");
+}
+
+void test_arrays()
+{
+    printf("Testing array operations...\n");
+    const char *test_input =
+        "var numbers = [1, 2, 3, 4, 5];\n"
+        "print numbers[2];\n"
+        "numbers[0] = 99;\n"
+        "var matrix = [[1, 2], [3, 4]];\n"
+        "print matrix[1][0];\n";
+
+    write_test_file(test_input, "test_arrays.txt");
+    generate_ast("test_arrays.txt");
+    printf("Array operations test completed\n\n");
+}
+
+void test_logical_operators()
+{
+    printf("Testing logical operators...\n");
+    const char *test_input =
+        "var a = true;\n"
+        "var b = false;\n"
+        "print a and b;\n"
+        "print a or b;\n"
+        "print not a;\n"
+        "if (a and not b) {\n"
+        "    print \"Logic works!\";\n"
+        "}\n";
+
+    write_test_file(test_input, "test_logical.txt");
+    generate_ast("test_logical.txt");
+    printf("Logical operators test completed\n\n");
+}
+
+void test_scoping()
+{
+    printf("Testing variable scoping...\n");
+    const char *test_input =
+        "var global = 10;\n"
+        "{\n"
+        "    var local = 20;\n"
+        "    print global + local;\n"
+        "}\n"
+        "func test() {\n"
+        "    var func_local = 30;\n"
+        "    print global + func_local;\n"
+        "}\n"
+        "test();\n";
+
+    write_test_file(test_input, "test_scoping.txt");
+    generate_ast("test_scoping.txt");
+    printf("Variable scoping test completed\n\n");
+}
+
+void test_error_cases()
+{
+    printf("Testing error cases...\n");
+    const char *test_input =
+        "var x = 5\n"                    // Missing semicolon
+        "print \"Unterminated string;\n" // Unterminated string
+        "var 123invalid = 10;\n"         // Invalid variable name
+        "var y = @invalid_char;\n";      // Invalid character
+
+    write_test_file(test_input, "test_errors.txt");
+    generate_ast("test_errors.txt");
+    printf("Error cases test completed\n\n");
+}
+
+void test_expressions_precedence()
+{
+    printf("Testing expression precedence...\n");
+    const char *test_input =
+        "var a = 2 + 3 * 4;\n"     // Should be 14, not 20
+        "var b = (2 + 3) * 4;\n"   // Should be 20
+        "var c = 15 - 3 + 2;\n"    // Should be 14
+        "var d = 15 - (3 + 2);\n"  // Should be 10
+        "var e = 10 / 2 * 3;\n"    // Should be 15
+        "var f = 10 / (2 * 3);\n"; // Should be approx 1.67
+
+    write_test_file(test_input, "test_precedence.txt");
+    generate_ast("test_precedence.txt");
+    printf("Expression precedence test completed\n\n");
+}
+
+void test_switch_case()
+{
+    printf("Testing switch case statements...\n");
+    const char *test_input =
+        "var option = 2;\n"
+        "switch (option) {\n"
+        "    case 1:\n"
+        "        print \"Option One\";\n"
+        "        break;\n"
+        "    case 2:\n"
+        "        print \"Option Two\";\n"
+        "        break;\n"
+        "    default:\n"
+        "        print \"Unknown Option\";\n"
+        "}\n";
+
+    write_test_file(test_input, "test_switch.txt");
+    generate_ast("test_switch.txt");
+    printf("Switch case test completed\n\n");
+}
+
 void test_complex_code()
 {
     printf("Testing complex code...\n");
@@ -1568,7 +1847,16 @@ int main()
     test_operators();
     test_comments();
     test_condition_tokens();
+    test_loops();
+    test_nested_blocks();
+    // test_function_definitions();
+    // test_arrays();
+    // test_logical_operators();
+    // test_scoping();
+    test_expressions_precedence();
+    // test_switch_case();
     // test_complex_code();
+    // test_error_cases();
 
     printf("All scanner tests completed.\n");
     return 0;
