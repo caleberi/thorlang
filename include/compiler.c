@@ -183,6 +183,24 @@ static void unary()
     }
 }
 
+static void literal()
+{
+    switch (parser.previous.type)
+    {
+    case TOKEN_FALSE:
+        emit_byte_code(OP_FALSE);
+        break;
+    case TOKEN_NIL:
+        emit_byte_code(OP_NIL);
+        break;
+    case TOKEN_TRUE:
+        emit_byte_code(OP_TRUE);
+        break;
+    default:
+        return;
+    }
+}
+
 static void binary()
 {
     TokenType operator_type = parser.previous.type;
