@@ -25,6 +25,11 @@ Value peek(int distance)
     return peek_stack(&vm.stack, distance);
 }
 
+static bool is_falsey(Value value)
+{
+    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+}
+
 static void runtime_error(const char *format, ...)
 {
     va_list args;
@@ -79,6 +84,18 @@ static InterpretResult run()
             push(constant);
             break;
         }
+        case OP_NIL:
+            push(NIL_VAL);
+            break;
+        case OP_TRUE:
+            push(BOOL_VAL(true));
+            break;
+        case OP_FALSE:
+            push(BOOL_VAL(false));
+            break;
+        case OP_NOT:
+            push(BOOL_VAL(is_falsey(pop())));
+            break;
         case OP_NEGATE:
             if (!IS_NUMBER(peek(0)))
             {
@@ -86,6 +103,17 @@ static InterpretResult run()
                 return INTERPRET_RUNTIME_ERROR;
             }
             push(NUMBER_VAL(-AS_NUMBER(pop())));
+            break;
+        case OP_EQUAL:
+            Value b = pop();
+            Value a = pop();
+            push(BOOL_VAL(values_equal(a, b)));
+            break;
+        case OP_GREATER:
+            BINARY_OP(BOOL_VAL, >);
+            break;
+        case OP_LESS:
+            BINARY_OP(BOOL_VAL, <);
             break;
         case OP_ADD:
             BINARY_OP(NUMBER_VAL, +);
@@ -100,11 +128,9 @@ static InterpretResult run()
             BINARY_OP(NUMBER_VAL, /);
             break;
         case OP_RETURN:
-        {
             print_value(pop());
             printf("\n");
             return INTERPRET_OK;
-        }
         }
     }
 #undef READ_BYTE
@@ -125,5 +151,6 @@ InterpretResult interpret(const char *source)
     InterpretResult result = run();
 
     free_chunk(&chunk);
+    double d = 4 % 3;
     return INTERPRET_OK;
 }
