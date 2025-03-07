@@ -172,6 +172,9 @@ static void unary()
     parse_precedence(PREC_UNARY);
     switch (operator_type)
     {
+    case TOKEN_BANG:
+        emit_byte_code(OP_NOT);
+        break;
     case TOKEN_MINUS:
         emit_byte_code(OP_NEGATE);
         break;
