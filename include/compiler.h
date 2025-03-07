@@ -21,6 +21,7 @@ static void unary();
 static void grouping();
 static void expression();
 static void number();
+static void ternary();
 
 typedef enum
 {

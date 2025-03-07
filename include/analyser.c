@@ -1222,7 +1222,7 @@ void generate_ast(const char *path)
     scan_tokens(&scanner, &tks);
 
     printf("Token List:\n");
-    for (size_t i = 0; i < tks.count; i++)
+    for (int i = 0; i < tks.count; i++)
     {
         Token *ptr = &tks.entries[i];
         char *lexeme = malloc(sizeof(char) * (ptr->length + 1));
