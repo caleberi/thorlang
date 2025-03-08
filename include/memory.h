@@ -5,6 +5,9 @@
 #define RESIZE_PERCENT 80
 #define CHUNK_SIZE 10
 
+#define ALLOCATE(type, count) \
+    (type *)reallocate(NULL, 0, sizeof(type) * (count))
+
 #define GROW_CAP(type, capacity, percent_growth) \
     ((capacity) > ((type)(percent_growth / 100) * capacity) ? (capacity + (type)(capacity * ((0.5 * percent_growth) / 100))) : 16)
 
