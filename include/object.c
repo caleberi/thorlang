@@ -30,3 +30,13 @@ static ObjString *allocate_string(char *chars, int length)
     string->chars = chars;
     return string;
 }
+
+void print_object(Value value)
+{
+    switch (OBJ_TYPE(value))
+    {
+    case OBJ_STRING:
+        printf("%s", AS_CSTRING(value));
+        break;
+    }
+}
