@@ -1,6 +1,7 @@
 #ifndef _THOR_MEMORY_H_
 #define _THOR_MEMORY_H_
 #include "common.h"
+#include "object.h"
 
 #define RESIZE_PERCENT 80
 #define CHUNK_SIZE 10
@@ -18,7 +19,10 @@
 #define FREE_ARRAY(type, pointer, capacity) \
     reallocate(pointer, sizeof(type) * (capacity), 0)
 
+#define FREE(type, pointer) reallocate(pointer, sizeof(type), 0)
+
 void *reallocate(void *, size_t, size_t);
+void free_objects();
 
 #define INIT_ARRAY(T, val_type) \
     typedef struct T            \
