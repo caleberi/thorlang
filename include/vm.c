@@ -7,8 +7,17 @@ VM vm;
 
 STACK_IMPL(stack, Value, stack);
 
-void init_vm() { init_stack(&vm.stack, 256); }
-void free_vm() { free_stack(&vm.stack); }
+void init_vm()
+{
+    reset_stack(&vm.stack);
+    init_stack(&vm.stack, 256);
+    vm.objects = NULL;
+}
+void free_vm()
+{
+    free_objects();
+    free_stack(&vm.stack);
+}
 
 void push(Value value)
 {
