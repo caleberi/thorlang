@@ -17,6 +17,8 @@ typedef struct VM
     Chunk *chunk;
     uint8_t *ip;
     stack stack;
+
+    Obj *objects;
 } VM;
 
 void init_vm();
@@ -24,5 +26,7 @@ void free_vm();
 InterpretResult interpret(const char *source);
 void push(Value value);
 Value pop();
+
+extern VM vm;
 
 #endif //_THOR_VM_H_
