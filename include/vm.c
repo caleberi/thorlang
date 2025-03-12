@@ -5,6 +5,7 @@
 
 VM vm;
 
+static void concatenate();
 STACK_IMPL(stack, Value, stack);
 
 void init_vm()
@@ -125,8 +126,24 @@ static InterpretResult run()
             BINARY_OP(BOOL_VAL, <);
             break;
         case OP_ADD:
-            BINARY_OP(NUMBER_VAL, +);
+        {
+            if (IS_STRING(peek(0)) && IS_STRING(peek(1)))
+            {
+                concatenate();
+            }
+            else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1)))
+            {
+                double b = AS_NUMBER(pop());
+                double a = AS_NUMBER(pop());
+                push(NUMBER_VAL(a + b));
+            }
+            else
+            {
+                runtime_error("Operands must be two numbers or two strings.");
+                return INTERPRET_RUNTIME_ERROR;
+            }
             break;
+        }
         case OP_SUBTRACT:
             BINARY_OP(NUMBER_VAL, -);
             break;
@@ -146,7 +163,22 @@ static InterpretResult run()
 #undef READ_CONSTANT
 }
 
-InterpretResult interpret(const char *source)
+static void concatenate()
+{
+    ObjString *b = AS_STRING(pop());
+    ObjString *a = AS_STRING(pop());
+
+    int length = a->length + b->length;
+    char *chars = ALLOCATE(char, length + 1);
+    memcpy(chars, a->chars, a->length);
+    memcpy(chars + a->length, b->chars, b->length);
+    chars[length] = '\0';
+
+    ObjString *result = take_string(chars, length);
+    push(OBJ_VAL(result));
+}
+
+static InterpretResult interpret(const char *source)
 {
     Chunk chunk;
     if (!compile(source, &chunk))
@@ -160,6 +192,5 @@ InterpretResult interpret(const char *source)
     InterpretResult result = run();
 
     free_chunk(&chunk);
-    double d = 4 % 3;
     return INTERPRET_OK;
 }
