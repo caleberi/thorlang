@@ -65,6 +65,12 @@ int disassemble_instruction(Chunk *chunk, int offset)
         return constant_instruction("OP_CONSTANT", chunk, offset);
     case OP_CONSTANT_LONG:
         return constant_instruction("OP_CONSTANT_LONG", chunk, offset);
+    case OP_PRINT:
+        return simple_instruction("OP_PRINT", offset);
+    case OP_POP:
+        return simple_instruction("OP_POP", offset);
+    case OP_DEFINE_GLOBAL:
+        return constant_instruction("OP_DEFINE_GLOBAL", chunk, offset);
     default:
         printf("Unknown opcode %d\n", instruction);
         return offset + 1;
