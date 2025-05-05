@@ -3,6 +3,7 @@
 
 #include "chunk.h"
 #include "stack.h"
+#include "table.h"
 
 typedef enum InterpretResult
 {
@@ -17,6 +18,8 @@ typedef struct VM
     Chunk *chunk;
     uint8_t *ip;
     stack stack;
+    Table strings;
+    Table globals;
 
     Obj *objects;
 } VM;
