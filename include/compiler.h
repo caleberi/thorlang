@@ -3,6 +3,7 @@
 #include "chunk.h"
 #include "scanner.h"
 #include "debug.h"
+#include "object.h"
 
 typedef struct
 {
@@ -22,6 +23,7 @@ static void grouping();
 static void expression();
 static void number();
 static void ternary();
+static void string();
 
 typedef enum
 {

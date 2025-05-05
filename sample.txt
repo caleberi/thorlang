@@ -1,0 +1,802 @@
+Starting scanner tests...
+
+Testing simple expression tokens...
+buffer:
+var x=45;
+print "Testing 12";
+debug (( -5 + 8 ) * 9) + 1238.348 - 20;
+var z = x + 45.78;
+
+Token List:
+Token: type=VAR, lexeme='var', line=1
+Token: type=IDENTIFIER, lexeme='x', line=1
+Token: type=EQUAL, lexeme='=', line=1
+Token: type=NUMBER, lexeme='45', line=1
+Token: type=SEMICOLON, lexeme=';', line=1
+Token: type=PRINT, lexeme='print', line=2
+Token: type=STRING, lexeme='"Testing 12"', line=2
+Token: type=SEMICOLON, lexeme=';', line=2
+Token: type=DEBUG, lexeme='debug', line=3
+Token: type=LEFT_PAREN, lexeme='(', line=3
+Token: type=LEFT_PAREN, lexeme='(', line=3
+Token: type=MINUS, lexeme='-', line=3
+Token: type=NUMBER, lexeme='5', line=3
+Token: type=PLUS, lexeme='+', line=3
+Token: type=NUMBER, lexeme='8', line=3
+Token: type=RIGHT_PAREN, lexeme=')', line=3
+Token: type=STAR, lexeme='*', line=3
+Token: type=NUMBER, lexeme='9', line=3
+Token: type=RIGHT_PAREN, lexeme=')', line=3
+Token: type=PLUS, lexeme='+', line=3
+Token: type=NUMBER, lexeme='1238.348', line=3
+Token: type=MINUS, lexeme='-', line=3
+Token: type=NUMBER, lexeme='20', line=3
+Token: type=SEMICOLON, lexeme=';', line=3
+Token: type=VAR, lexeme='var', line=4
+Token: type=IDENTIFIER, lexeme='z', line=4
+Token: type=EQUAL, lexeme='=', line=4
+Token: type=IDENTIFIER, lexeme='x', line=4
+Token: type=PLUS, lexeme='+', line=4
+Token: type=NUMBER, lexeme='45.78', line=4
+Token: type=SEMICOLON, lexeme=';', line=4
+Token: type=EOF, lexeme='', line=5
+ Variable Declaration: x
+   Initializer:
+     Number: 45.000000
+ Print Statement:
+   String: ""Testing 12""
+ Debug Statement:
+   Binary Expression:
+     Operator: MINUS
+     Left:
+       Binary Expression:
+         Operator: PLUS
+         Left:
+           Grouping Expression:
+             Expression:
+               Binary Expression:
+                 Operator: STAR
+                 Left:
+                   Grouping Expression:
+                     Expression:
+                       Binary Expression:
+                         Operator: PLUS
+                         Left:
+                           Unary Expression:
+                             Operator: MINUS
+                             Operand:
+                               Number: 5.000000
+                         Right:
+                           Number: 8.000000
+                 Right:
+                   Number: 9.000000
+         Right:
+           Number: 1238.348000
+     Right:
+       Number: 20.000000
+ Variable Declaration: z
+   Initializer:
+     Binary Expression:
+       Operator: PLUS
+       Left:
+         Variable:
+           Name: x
+       Right:
+         Number: 45.780000
+
+Basic simple statement test completed
+
+Testing simple expression tokens...
+buffer:
+var y = (( -5 + 8 ) * 9) + 1238.348 - 20;
+
+Token List:
+Token: type=VAR, lexeme='var', line=1
+Token: type=IDENTIFIER, lexeme='y', line=1
+Token: type=EQUAL, lexeme='=', line=1
+Token: type=LEFT_PAREN, lexeme='(', line=1
+Token: type=LEFT_PAREN, lexeme='(', line=1
+Token: type=MINUS, lexeme='-', line=1
+Token: type=NUMBER, lexeme='5', line=1
+Token: type=PLUS, lexeme='+', line=1
+Token: type=NUMBER, lexeme='8', line=1
+Token: type=RIGHT_PAREN, lexeme=')', line=1
+Token: type=STAR, lexeme='*', line=1
+Token: type=NUMBER, lexeme='9', line=1
+Token: type=RIGHT_PAREN, lexeme=')', line=1
+Token: type=PLUS, lexeme='+', line=1
+Token: type=NUMBER, lexeme='1238.348', line=1
+Token: type=MINUS, lexeme='-', line=1
+Token: type=NUMBER, lexeme='20', line=1
+Token: type=SEMICOLON, lexeme=';', line=1
+Token: type=EOF, lexeme='', line=2
+ Variable Declaration: y
+   Initializer:
+     Binary Expression:
+       Operator: MINUS
+       Left:
+         Binary Expression:
+           Operator: PLUS
+           Left:
+             Grouping Expression:
+               Expression:
+                 Binary Expression:
+                   Operator: STAR
+                   Left:
+                     Grouping Expression:
+                       Expression:
+                         Binary Expression:
+                           Operator: PLUS
+                           Left:
+                             Unary Expression:
+                               Operator: MINUS
+                               Operand:
+                                 Number: 5.000000
+                           Right:
+                             Number: 8.000000
+                   Right:
+                     Number: 9.000000
+           Right:
+             Number: 1238.348000
+       Right:
+         Number: 20.000000
+
+Basic simple test completed
+
+Testing basic tokens...
+buffer:
+var x = 42;
+if (x > 10) {
+    print x;
+}
+
+Token List:
+Token: type=VAR, lexeme='var', line=1
+Token: type=IDENTIFIER, lexeme='x', line=1
+Token: type=EQUAL, lexeme='=', line=1
+Token: type=NUMBER, lexeme='42', line=1
+Token: type=SEMICOLON, lexeme=';', line=1
+Token: type=IF, lexeme='if', line=2
+Token: type=LEFT_PAREN, lexeme='(', line=2
+Token: type=IDENTIFIER, lexeme='x', line=2
+Token: type=GREATER, lexeme='>', line=2
+Token: type=NUMBER, lexeme='10', line=2
+Token: type=RIGHT_PAREN, lexeme=')', line=2
+Token: type=LEFT_BRACE, lexeme='{', line=2
+Token: type=PRINT, lexeme='print', line=3
+Token: type=IDENTIFIER, lexeme='x', line=3
+Token: type=SEMICOLON, lexeme=';', line=3
+Token: type=RIGHT_BRACE, lexeme='}', line=4
+Token: type=EOF, lexeme='', line=5
+ Variable Declaration: x
+   Initializer:
+     Number: 42.000000
+ If Statement:
+   Condition:
+     Binary Expression:
+       Operator: GREATER
+       Left:
+         Variable:
+           Name: x
+       Right:
+         Number: 10.000000
+   Then Branch:
+     Block Statement (1 statements):
+       Print Statement:
+         Variable:
+           Name: x
+
+Basic tokens test completed
+
+Testing numbers and strings...
+buffer:
+print 123;
+print 45.67;
+print "Hello, World!";
+print 3.14159;
+
+Token List:
+Token: type=PRINT, lexeme='print', line=1
+Token: type=NUMBER, lexeme='123', line=1
+Token: type=SEMICOLON, lexeme=';', line=1
+Token: type=PRINT, lexeme='print', line=2
+Token: type=NUMBER, lexeme='45.67', line=2
+Token: type=SEMICOLON, lexeme=';', line=2
+Token: type=PRINT, lexeme='print', line=3
+Token: type=STRING, lexeme='"Hello, World!"', line=3
+Token: type=SEMICOLON, lexeme=';', line=3
+Token: type=PRINT, lexeme='print', line=4
+Token: type=NUMBER, lexeme='3.14159', line=4
+Token: type=SEMICOLON, lexeme=';', line=4
+Token: type=EOF, lexeme='', line=5
+ Print Statement:
+   Number: 123.000000
+ Print Statement:
+   Number: 45.670000
+ Print Statement:
+   String: ""Hello, World!""
+ Print Statement:
+   Number: 3.141590
+
+Numbers and strings test completed
+
+Testing operators...
+buffer:
+print a + b;
+print x - y;
+print m * n;
+print p / q;
+print a == b;
+print x != y;
+print m <= n;
+print p >= q;
+
+Token List:
+Token: type=PRINT, lexeme='print', line=1
+Token: type=IDENTIFIER, lexeme='a', line=1
+Token: type=PLUS, lexeme='+', line=1
+Token: type=IDENTIFIER, lexeme='b', line=1
+Token: type=SEMICOLON, lexeme=';', line=1
+Token: type=PRINT, lexeme='print', line=2
+Token: type=IDENTIFIER, lexeme='x', line=2
+Token: type=MINUS, lexeme='-', line=2
+Token: type=IDENTIFIER, lexeme='y', line=2
+Token: type=SEMICOLON, lexeme=';', line=2
+Token: type=PRINT, lexeme='print', line=3
+Token: type=IDENTIFIER, lexeme='m', line=3
+Token: type=STAR, lexeme='*', line=3
+Token: type=IDENTIFIER, lexeme='n', line=3
+Token: type=SEMICOLON, lexeme=';', line=3
+Token: type=PRINT, lexeme='print', line=4
+Token: type=IDENTIFIER, lexeme='p', line=4
+Token: type=SLASH, lexeme='/', line=4
+Token: type=IDENTIFIER, lexeme='q', line=4
+Token: type=SEMICOLON, lexeme=';', line=4
+Token: type=PRINT, lexeme='print', line=5
+Token: type=IDENTIFIER, lexeme='a', line=5
+Token: type=EQUAL_EQUAL, lexeme='==', line=5
+Token: type=IDENTIFIER, lexeme='b', line=5
+Token: type=SEMICOLON, lexeme=';', line=5
+Token: type=PRINT, lexeme='print', line=6
+Token: type=IDENTIFIER, lexeme='x', line=6
+Token: type=BANG_EQUAL, lexeme='!=', line=6
+Token: type=IDENTIFIER, lexeme='y', line=6
+Token: type=SEMICOLON, lexeme=';', line=6
+Token: type=PRINT, lexeme='print', line=7
+Token: type=IDENTIFIER, lexeme='m', line=7
+Token: type=LESS_EQUAL, lexeme='<=', line=7
+Token: type=IDENTIFIER, lexeme='n', line=7
+Token: type=SEMICOLON, lexeme=';', line=7
+Token: type=PRINT, lexeme='print', line=8
+Token: type=IDENTIFIER, lexeme='p', line=8
+Token: type=GREATER_EQUAL, lexeme='>=', line=8
+Token: type=IDENTIFIER, lexeme='q', line=8
+Token: type=SEMICOLON, lexeme=';', line=8
+Token: type=EOF, lexeme='', line=9
+ Print Statement:
+   Binary Expression:
+     Operator: PLUS
+     Left:
+       Variable:
+         Name: a
+     Right:
+       Variable:
+         Name: b
+ Print Statement:
+   Binary Expression:
+     Operator: MINUS
+     Left:
+       Variable:
+         Name: x
+     Right:
+       Variable:
+         Name: y
+ Print Statement:
+   Binary Expression:
+     Operator: STAR
+     Left:
+       Variable:
+         Name: m
+     Right:
+       Variable:
+         Name: n
+ Print Statement:
+   Binary Expression:
+     Operator: SLASH
+     Left:
+       Variable:
+         Name: p
+     Right:
+       Variable:
+         Name: q
+ Print Statement:
+   Binary Expression:
+     Operator: EQUAL_EQUAL
+     Left:
+       Variable:
+         Name: a
+     Right:
+       Variable:
+         Name: b
+ Print Statement:
+   Binary Expression:
+     Operator: BANG_EQUAL
+     Left:
+       Variable:
+         Name: x
+     Right:
+       Variable:
+         Name: y
+ Print Statement:
+   Binary Expression:
+     Operator: LESS_EQUAL
+     Left:
+       Variable:
+         Name: m
+     Right:
+       Variable:
+         Name: n
+ Print Statement:
+   Binary Expression:
+     Operator: GREATER_EQUAL
+     Left:
+       Variable:
+         Name: p
+     Right:
+       Variable:
+         Name: q
+
+Operators test completed
+
+Testing comments...
+buffer:
+# This is a comment
+var x = 10; # Inline comment
+# Another comment
+print x;
+
+Token List:
+Token: type=VAR, lexeme='var', line=2
+Token: type=IDENTIFIER, lexeme='x', line=2
+Token: type=EQUAL, lexeme='=', line=2
+Token: type=NUMBER, lexeme='10', line=2
+Token: type=SEMICOLON, lexeme=';', line=2
+Token: type=PRINT, lexeme='print', line=4
+Token: type=IDENTIFIER, lexeme='x', line=4
+Token: type=SEMICOLON, lexeme=';', line=4
+Token: type=EOF, lexeme='', line=5
+ Variable Declaration: x
+   Initializer:
+     Number: 10.000000
+ Print Statement:
+   Variable:
+     Name: x
+
+Comments test completed
+
+Testing basic tokens...
+buffer:
+var x = 42;
+if (x > 10) {
+    print x;
+} else {
+   print "dope";
+}
+
+Token List:
+Token: type=VAR, lexeme='var', line=1
+Token: type=IDENTIFIER, lexeme='x', line=1
+Token: type=EQUAL, lexeme='=', line=1
+Token: type=NUMBER, lexeme='42', line=1
+Token: type=SEMICOLON, lexeme=';', line=1
+Token: type=IF, lexeme='if', line=2
+Token: type=LEFT_PAREN, lexeme='(', line=2
+Token: type=IDENTIFIER, lexeme='x', line=2
+Token: type=GREATER, lexeme='>', line=2
+Token: type=NUMBER, lexeme='10', line=2
+Token: type=RIGHT_PAREN, lexeme=')', line=2
+Token: type=LEFT_BRACE, lexeme='{', line=2
+Token: type=PRINT, lexeme='print', line=3
+Token: type=IDENTIFIER, lexeme='x', line=3
+Token: type=SEMICOLON, lexeme=';', line=3
+Token: type=RIGHT_BRACE, lexeme='}', line=4
+Token: type=ELSE, lexeme='else', line=4
+Token: type=LEFT_BRACE, lexeme='{', line=4
+Token: type=PRINT, lexeme='print', line=5
+Token: type=STRING, lexeme='"dope"', line=5
+Token: type=SEMICOLON, lexeme=';', line=5
+Token: type=RIGHT_BRACE, lexeme='}', line=6
+Token: type=EOF, lexeme='', line=7
+ Variable Declaration: x
+   Initializer:
+     Number: 42.000000
+ If Statement:
+   Condition:
+     Binary Expression:
+       Operator: GREATER
+       Left:
+         Variable:
+           Name: x
+       Right:
+         Number: 10.000000
+   Then Branch:
+     Block Statement (1 statements):
+       Print Statement:
+         Variable:
+           Name: x
+   Else Branch:
+     Print Statement:
+       String: ""dope""
+
+Basic tokens test completed
+
+Testing loop constructs...
+buffer:
+var i = 0;
+while (i < 10) {
+    print i;
+    i = i + 1;
+}
+
+for (var j = 0; j < 5; j = j + 1) {
+    print j * j;
+}
+
+Token List:
+Token: type=VAR, lexeme='var', line=1
+Token: type=IDENTIFIER, lexeme='i', line=1
+Token: type=EQUAL, lexeme='=', line=1
+Token: type=NUMBER, lexeme='0', line=1
+Token: type=SEMICOLON, lexeme=';', line=1
+Token: type=WHILE, lexeme='while', line=2
+Token: type=LEFT_PAREN, lexeme='(', line=2
+Token: type=IDENTIFIER, lexeme='i', line=2
+Token: type=LESS, lexeme='<', line=2
+Token: type=NUMBER, lexeme='10', line=2
+Token: type=RIGHT_PAREN, lexeme=')', line=2
+Token: type=LEFT_BRACE, lexeme='{', line=2
+Token: type=PRINT, lexeme='print', line=3
+Token: type=IDENTIFIER, lexeme='i', line=3
+Token: type=SEMICOLON, lexeme=';', line=3
+Token: type=IDENTIFIER, lexeme='i', line=4
+Token: type=EQUAL, lexeme='=', line=4
+Token: type=IDENTIFIER, lexeme='i', line=4
+Token: type=PLUS, lexeme='+', line=4
+Token: type=NUMBER, lexeme='1', line=4
+Token: type=SEMICOLON, lexeme=';', line=4
+Token: type=RIGHT_BRACE, lexeme='}', line=5
+Token: type=FOR, lexeme='for', line=7
+Token: type=LEFT_PAREN, lexeme='(', line=7
+Token: type=VAR, lexeme='var', line=7
+Token: type=IDENTIFIER, lexeme='j', line=7
+Token: type=EQUAL, lexeme='=', line=7
+Token: type=NUMBER, lexeme='0', line=7
+Token: type=SEMICOLON, lexeme=';', line=7
+Token: type=IDENTIFIER, lexeme='j', line=7
+Token: type=LESS, lexeme='<', line=7
+Token: type=NUMBER, lexeme='5', line=7
+Token: type=SEMICOLON, lexeme=';', line=7
+Token: type=IDENTIFIER, lexeme='j', line=7
+Token: type=EQUAL, lexeme='=', line=7
+Token: type=IDENTIFIER, lexeme='j', line=7
+Token: type=PLUS, lexeme='+', line=7
+Token: type=NUMBER, lexeme='1', line=7
+Token: type=RIGHT_PAREN, lexeme=')', line=7
+Token: type=LEFT_BRACE, lexeme='{', line=7
+Token: type=PRINT, lexeme='print', line=8
+Token: type=IDENTIFIER, lexeme='j', line=8
+Token: type=STAR, lexeme='*', line=8
+Token: type=IDENTIFIER, lexeme='j', line=8
+Token: type=SEMICOLON, lexeme=';', line=8
+Token: type=RIGHT_BRACE, lexeme='}', line=9
+Token: type=EOF, lexeme='', line=10
+ Variable Declaration: i
+   Initializer:
+     Number: 0.000000
+ While Statement:
+   Condition:
+     Binary Expression:
+       Operator: LESS
+       Left:
+         Variable:
+           Name: i
+       Right:
+         Number: 10.000000
+   Body:
+     Block Statement (2 statements):
+       Print Statement:
+         Variable:
+           Name: i
+       Assignment Statement:
+         Name: i
+         Value: 
+           Binary Expression:
+             Operator: PLUS
+             Left:
+               Variable:
+                 Name: i
+             Right:
+               Number: 1.000000
+ For Statement:
+   Initializer:
+     Variable Declaration: j
+       Initializer:
+         Number: 0.000000
+   Condition:
+     Assignment Statement:
+       Name: j
+       Value: 
+         Binary Expression:
+           Operator: PLUS
+           Left:
+             Variable:
+               Name: j
+           Right:
+             Number: 1.000000
+   Body:
+     Block Statement (1 statements):
+       Print Statement:
+         Binary Expression:
+           Operator: STAR
+           Left:
+             Variable:
+               Name: j
+           Right:
+             Variable:
+               Name: j
+
+Loop constructs test completed
+
+Testing nested block structures...
+buffer:
+var x = 10;
+if (x > 5) {
+    if (x < 15) {
+        print "Between 5 and 15";
+        {
+            var y = x * 2;
+            print y;
+        }
+    }
+}
+
+Token List:
+Token: type=VAR, lexeme='var', line=1
+Token: type=IDENTIFIER, lexeme='x', line=1
+Token: type=EQUAL, lexeme='=', line=1
+Token: type=NUMBER, lexeme='10', line=1
+Token: type=SEMICOLON, lexeme=';', line=1
+Token: type=IF, lexeme='if', line=2
+Token: type=LEFT_PAREN, lexeme='(', line=2
+Token: type=IDENTIFIER, lexeme='x', line=2
+Token: type=GREATER, lexeme='>', line=2
+Token: type=NUMBER, lexeme='5', line=2
+Token: type=RIGHT_PAREN, lexeme=')', line=2
+Token: type=LEFT_BRACE, lexeme='{', line=2
+Token: type=IF, lexeme='if', line=3
+Token: type=LEFT_PAREN, lexeme='(', line=3
+Token: type=IDENTIFIER, lexeme='x', line=3
+Token: type=LESS, lexeme='<', line=3
+Token: type=NUMBER, lexeme='15', line=3
+Token: type=RIGHT_PAREN, lexeme=')', line=3
+Token: type=LEFT_BRACE, lexeme='{', line=3
+Token: type=PRINT, lexeme='print', line=4
+Token: type=STRING, lexeme='"Between 5 and 15"', line=4
+Token: type=SEMICOLON, lexeme=';', line=4
+Token: type=LEFT_BRACE, lexeme='{', line=5
+Token: type=VAR, lexeme='var', line=6
+Token: type=IDENTIFIER, lexeme='y', line=6
+Token: type=EQUAL, lexeme='=', line=6
+Token: type=IDENTIFIER, lexeme='x', line=6
+Token: type=STAR, lexeme='*', line=6
+Token: type=NUMBER, lexeme='2', line=6
+Token: type=SEMICOLON, lexeme=';', line=6
+Token: type=PRINT, lexeme='print', line=7
+Token: type=IDENTIFIER, lexeme='y', line=7
+Token: type=SEMICOLON, lexeme=';', line=7
+Token: type=RIGHT_BRACE, lexeme='}', line=8
+Token: type=RIGHT_BRACE, lexeme='}', line=9
+Token: type=RIGHT_BRACE, lexeme='}', line=10
+Token: type=EOF, lexeme='', line=11
+ Variable Declaration: x
+   Initializer:
+     Number: 10.000000
+ If Statement:
+   Condition:
+     Binary Expression:
+       Operator: GREATER
+       Left:
+         Variable:
+           Name: x
+       Right:
+         Number: 5.000000
+   Then Branch:
+     Block Statement (1 statements):
+       If Statement:
+         Condition:
+           Binary Expression:
+             Operator: LESS
+             Left:
+               Variable:
+                 Name: x
+             Right:
+               Number: 15.000000
+         Then Branch:
+           Block Statement (2 statements):
+             Print Statement:
+               String: ""Between 5 and 15""
+             Block Statement (2 statements):
+               Variable Declaration: y
+                 Initializer:
+                   Binary Expression:
+                     Operator: STAR
+                     Left:
+                       Variable:
+                         Name: x
+                     Right:
+                       Number: 2.000000
+               Print Statement:
+                 Variable:
+                   Name: y
+
+Nested blocks test completed
+
+Testing expression precedence...
+buffer:
+var a = 2 + 3 * 4;
+var b = (2 + 3) * 4;
+var c = 15 - 3 + 2;
+var d = 15 - (3 + 2);
+var e = 10 / 2 * 3;
+var f = 10 / (2 * 3);
+
+Token List:
+Token: type=VAR, lexeme='var', line=1
+Token: type=IDENTIFIER, lexeme='a', line=1
+Token: type=EQUAL, lexeme='=', line=1
+Token: type=NUMBER, lexeme='2', line=1
+Token: type=PLUS, lexeme='+', line=1
+Token: type=NUMBER, lexeme='3', line=1
+Token: type=STAR, lexeme='*', line=1
+Token: type=NUMBER, lexeme='4', line=1
+Token: type=SEMICOLON, lexeme=';', line=1
+Token: type=VAR, lexeme='var', line=2
+Token: type=IDENTIFIER, lexeme='b', line=2
+Token: type=EQUAL, lexeme='=', line=2
+Token: type=LEFT_PAREN, lexeme='(', line=2
+Token: type=NUMBER, lexeme='2', line=2
+Token: type=PLUS, lexeme='+', line=2
+Token: type=NUMBER, lexeme='3', line=2
+Token: type=RIGHT_PAREN, lexeme=')', line=2
+Token: type=STAR, lexeme='*', line=2
+Token: type=NUMBER, lexeme='4', line=2
+Token: type=SEMICOLON, lexeme=';', line=2
+Token: type=VAR, lexeme='var', line=3
+Token: type=IDENTIFIER, lexeme='c', line=3
+Token: type=EQUAL, lexeme='=', line=3
+Token: type=NUMBER, lexeme='15', line=3
+Token: type=MINUS, lexeme='-', line=3
+Token: type=NUMBER, lexeme='3', line=3
+Token: type=PLUS, lexeme='+', line=3
+Token: type=NUMBER, lexeme='2', line=3
+Token: type=SEMICOLON, lexeme=';', line=3
+Token: type=VAR, lexeme='var', line=4
+Token: type=IDENTIFIER, lexeme='d', line=4
+Token: type=EQUAL, lexeme='=', line=4
+Token: type=NUMBER, lexeme='15', line=4
+Token: type=MINUS, lexeme='-', line=4
+Token: type=LEFT_PAREN, lexeme='(', line=4
+Token: type=NUMBER, lexeme='3', line=4
+Token: type=PLUS, lexeme='+', line=4
+Token: type=NUMBER, lexeme='2', line=4
+Token: type=RIGHT_PAREN, lexeme=')', line=4
+Token: type=SEMICOLON, lexeme=';', line=4
+Token: type=VAR, lexeme='var', line=5
+Token: type=IDENTIFIER, lexeme='e', line=5
+Token: type=EQUAL, lexeme='=', line=5
+Token: type=NUMBER, lexeme='10', line=5
+Token: type=SLASH, lexeme='/', line=5
+Token: type=NUMBER, lexeme='2', line=5
+Token: type=STAR, lexeme='*', line=5
+Token: type=NUMBER, lexeme='3', line=5
+Token: type=SEMICOLON, lexeme=';', line=5
+Token: type=VAR, lexeme='var', line=6
+Token: type=IDENTIFIER, lexeme='f', line=6
+Token: type=EQUAL, lexeme='=', line=6
+Token: type=NUMBER, lexeme='10', line=6
+Token: type=SLASH, lexeme='/', line=6
+Token: type=LEFT_PAREN, lexeme='(', line=6
+Token: type=NUMBER, lexeme='2', line=6
+Token: type=STAR, lexeme='*', line=6
+Token: type=NUMBER, lexeme='3', line=6
+Token: type=RIGHT_PAREN, lexeme=')', line=6
+Token: type=SEMICOLON, lexeme=';', line=6
+Token: type=EOF, lexeme='', line=7
+ Variable Declaration: a
+   Initializer:
+     Binary Expression:
+       Operator: PLUS
+       Left:
+         Number: 2.000000
+       Right:
+         Binary Expression:
+           Operator: STAR
+           Left:
+             Number: 3.000000
+           Right:
+             Number: 4.000000
+ Variable Declaration: b
+   Initializer:
+     Binary Expression:
+       Operator: STAR
+       Left:
+         Grouping Expression:
+           Expression:
+             Binary Expression:
+               Operator: PLUS
+               Left:
+                 Number: 2.000000
+               Right:
+                 Number: 3.000000
+       Right:
+         Number: 4.000000
+ Variable Declaration: c
+   Initializer:
+     Binary Expression:
+       Operator: PLUS
+       Left:
+         Binary Expression:
+           Operator: MINUS
+           Left:
+             Number: 15.000000
+           Right:
+             Number: 3.000000
+       Right:
+         Number: 2.000000
+ Variable Declaration: d
+   Initializer:
+     Binary Expression:
+       Operator: MINUS
+       Left:
+         Number: 15.000000
+       Right:
+         Grouping Expression:
+           Expression:
+             Binary Expression:
+               Operator: PLUS
+               Left:
+                 Number: 3.000000
+               Right:
+                 Number: 2.000000
+ Variable Declaration: e
+   Initializer:
+     Binary Expression:
+       Operator: STAR
+       Left:
+         Binary Expression:
+           Operator: SLASH
+           Left:
+             Number: 10.000000
+           Right:
+             Number: 2.000000
+       Right:
+         Number: 3.000000
+ Variable Declaration: f
+   Initializer:
+     Binary Expression:
+       Operator: SLASH
+       Left:
+         Number: 10.000000
+       Right:
+         Grouping Expression:
+           Expression:
+             Binary Expression:
+               Operator: STAR
+               Left:
+                 Number: 2.000000
+               Right:
+                 Number: 3.000000
+
+Expression precedence test completed
+
+All scanner tests completed.
